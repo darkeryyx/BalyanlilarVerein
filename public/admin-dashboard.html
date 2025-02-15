@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <button id="logout-btn">Logout</button>
+    
+    <h2>News erstellen</h2>
+    <form id="newsForm">
+        <input type="hidden" id="news-id">
+        <label for="title">Titel:</label>
+        <input type="text" id="title" required>
+        <label for="content">Inhalt:</label>
+        <textarea id="content" required></textarea>
+        <button type="submit">Speichern</button>
+    </form>
+    
+    <h2>Bestehende News</h2>
+    <ul id="news-list"></ul>
+    <script src="js/admin.js" defer></script>
+
+    <script>
+        document.getElementById("logout-btn").addEventListener("click", async () => {
+            await fetch("/admin-logout", { method: "POST" });
+            window.location.href = "/admin.html"; 
+        });
+
+        async function fetchNews() {
+            try {
+                const response = await fetch("/news");
+                if (!response.ok) throw new Error("Fehler beim Abrufen der News");
+                const news = await response.json();
+                const newsList = document.getElementById("news-list");
+                newsList.innerHTML = "";
+                news.forEach(item => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <h3>${item.title}</h3>
+                        <p>${item.content}</p>
+                        <button onclick="editNews(${item.id}, '${item.title}', '${item.content}')">Bearbeiten</button>
+                        <button onclick="deleteNews(${item.id})">Löschen</button>
+                    `;
+                    newsList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Fehler beim Abrufen der News:", error);
+            }
+        }
+        
+        async function deleteNews(id) {
+            try {
+                const response = await fetch(`/news/${id}`, { method: "DELETE" });
+                if (!response.ok) throw new Error("Fehler beim Löschen der News");
+                await fetchNews();
+            } catch (error) {
+                console.error("Fehler beim Löschen der News:", error);
+            }
+        }
+        
+        function editNews(id, title, content) {
+            document.getElementById("news-id").value = id;
+            document.getElementById("title").value = title;
+            document.getElementById("content").value = content;
+        }
+        
+        document.getElementById("newsForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    
+    const title = document.getElementById("title").value.trim();
+    const content = document.getElementById("content").value.trim();
+
+    if (!title || !content) {
+        alert("Bitte Titel und Inhalt eingeben!");
+        return;
+    }
+
+    console.log("📤 Sende News an Server:", { title, content }); // Debug-Log
+
+    try {
+        const response = await fetch("/news", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, content })
+        });
+
+        console.log("📡 Antwort vom Server erhalten:", response.status); // Debug-Log
+
+        if (!response.ok) throw new Error("Fehler beim Speichern der News");
+        document.getElementById("newsForm").reset();
+        await fetchNews();
+    } catch (error) {
+        console.error("❌ Fehler beim Speichern der News:", error);
+    }
+});
+
+
+        
+        fetchNews();
+    </script>
+  
+
+</body>
+</html>

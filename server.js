@@ -184,20 +184,27 @@ app.get("/news", (req, res) => {
 
 // Route: Neue News hinzufügen
 app.post("/news", (req, res) => {
-    let news = loadNews();
+  let news = loadNews();
 
-    // Prüfe, ob bereits eine News mit dem gleichen Titel existiert (Verhindert doppelten Eintrag)
-    if (news.some(n => n.title === req.body.title && n.content === req.body.content)) {
-        return res.status(400).json({ error: "Diese News existiert bereits!" });
-    }
+  // Prüfe, ob bereits eine News mit dem gleichen Titel existiert (Verhindert doppelte Einträge)
+  if (news.some(n => n.title === req.body.title && n.content === req.body.content)) {
+      return res.status(400).json({ error: "Diese News existiert bereits!" });
+  }
 
-    const newArticle = { id: Date.now(), title: req.body.title, content: req.body.content };
-    news.push(newArticle);
-    saveNews(news);
+  const newArticle = {
+      id: Date.now(),
+      title: req.body.title,
+      content: req.body.content,
+      createdAt: new Date().toLocaleDateString("de-DE") // Aktuelles Datum hinzufügen
+  };
 
-    console.log("✅ News erfolgreich gespeichert:", newArticle);
-    res.status(201).json(newArticle);
+  news.push(newArticle);
+  saveNews(news);
+
+  console.log("✅ News erfolgreich gespeichert:", newArticle);
+  res.status(201).json(newArticle);
 });
+
 
 
 // Route: News löschen
@@ -216,20 +223,27 @@ app.listen(PORT, () => {
 
 // News bearbeiten
 app.put("/news/:id", (req, res) => {
-    let news = loadNews();
-    const index = news.findIndex(n => n.id == req.params.id);
-    
-    if (index === -1) {
-        return res.status(404).json({ error: "Artikel nicht gefunden" });
-    }
+  let news = loadNews();
+  const index = news.findIndex(n => n.id == req.params.id);
+  
+  if (index === -1) {
+      return res.status(404).json({ error: "Artikel nicht gefunden" });
+  }
 
-    // Aktualisierte News speichern
-    news[index] = { ...news[index], title: req.body.title, content: req.body.content };
-    saveNews(news);
+  // Datum des letzten Updates setzen
+  news[index] = {
+      ...news[index],
+      title: req.body.title,
+      content: req.body.content,
+      updatedAt: new Date().toLocaleDateString("de-DE") // Änderungsdatum speichern
+  };
 
-    console.log("✏️ News aktualisiert:", news[index]);
-    res.json(news[index]);
+  saveNews(news);
+
+  console.log("✏️ News aktualisiert:", news[index]);
+  res.json(news[index]);
 });
+
 
 // News löschen
 app.delete("/news/:id", (req, res) => {

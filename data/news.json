@@ -1,22 +1,25 @@
 [
   {
     "id": 1739224678469,
-    "title": "News1",
-    "content": "News1"
+    "title": "News1EditedfürIndexHtml",
+    "content": "News1",
+    "updatedAt": "15.2.2025"
   },
   {
     "id": 1739225109793,
     "title": "News2",
-    "content": "News2"
+    "content": "News2edit",
+    "updatedAt": "15.2.2025"
   },
   {
     "id": 1739225595962,
-    "title": "News3",
+    "title": "News3hu",
     "content": "News3"
   },
   {
-    "id": 1739225835314,
+    "id": 1739631673819,
     "title": "News4",
-    "content": "News4"
+    "content": "News4",
+    "createdAt": "15.2.2025"
   }
 ]

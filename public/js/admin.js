@@ -16,6 +16,10 @@ async function fetchNews() {
             li.innerHTML = `
                 <h3 contenteditable="false" class="news-title">${item.title}</h3>
                 <p contenteditable="false" class="news-content">${item.content}</p>
+                <small class="news-date">
+                    Erstellt am: ${item.createdAt || "Unbekannt"}
+                    ${item.updatedAt ? `<br>Letzte Änderung: ${item.updatedAt}` : ""}
+                </small>
                 <button class="edit-btn" data-id="${item.id}">✏️ Bearbeiten</button>
                 <button class="save-btn" data-id="${item.id}" style="display:none;">💾 Speichern</button>
                 <button class="delete-btn" data-id="${item.id}">🗑 Löschen</button>
@@ -23,7 +27,7 @@ async function fetchNews() {
             newsList.appendChild(li);
         });
 
-        // Bearbeiten-Buttons aktivieren
+        // Event-Listener für "Bearbeiten"-Buttons setzen
         document.querySelectorAll(".edit-btn").forEach(button => {
             button.addEventListener("click", (event) => {
                 const li = event.target.closest("li");
@@ -31,18 +35,16 @@ async function fetchNews() {
                 const content = li.querySelector(".news-content");
                 const saveBtn = li.querySelector(".save-btn");
 
-                // Editierbar machen
                 title.contentEditable = "true";
                 content.contentEditable = "true";
                 title.focus();
 
-                // Bearbeiten-Button ausblenden, Speichern-Button anzeigen
                 event.target.style.display = "none";
                 saveBtn.style.display = "inline-block";
             });
         });
 
-        // Speichern-Buttons aktivieren
+        // Event-Listener für "Speichern"-Buttons setzen
         document.querySelectorAll(".save-btn").forEach(button => {
             button.addEventListener("click", async (event) => {
                 const li = event.target.closest("li");
@@ -72,7 +74,7 @@ async function fetchNews() {
             });
         });
 
-        // Löschen-Buttons aktivieren
+        // Event-Listener für "Löschen"-Buttons setzen
         document.querySelectorAll(".delete-btn").forEach(button => {
             button.addEventListener("click", () => deleteNews(button.dataset.id));
         });
@@ -81,6 +83,7 @@ async function fetchNews() {
         console.error("Fehler beim Abrufen der News:", error);
     }
 }
+
 
 
 

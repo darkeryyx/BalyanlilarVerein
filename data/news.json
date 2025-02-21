@@ -1,11 +1,5 @@
 [
   {
-    "id": 1739224678469,
-    "title": "News1EditedfürIndexHtml",
-    "content": "News1",
-    "updatedAt": "15.2.2025"
-  },
-  {
     "id": 1739225109793,
     "title": "News2",
     "content": "News2edit",
@@ -18,8 +12,65 @@
   },
   {
     "id": 1739631673819,
-    "title": "News4",
+    "title": "News4Edited",
     "content": "News4",
-    "createdAt": "15.2.2025"
+    "createdAt": "15.2.2025",
+    "updatedAt": "15.2.2025"
+  },
+  {
+    "id": 1739980334396,
+    "title": "test",
+    "content": "t",
+    "image": "/uploads/1739980334387-Screenshot 2023-03-08 154815.png",
+    "video": null,
+    "createdAt": "19.2.2025"
+  },
+  {
+    "id": 1740137168549,
+    "title": "bild",
+    "content": "bild",
+    "image": "/uploads/1740137168540-Screenshot 2023-03-08 154815.png",
+    "video": null,
+    "createdAt": "21.2.2025"
+  },
+  {
+    "id": 1740137618101,
+    "title": "bild 3",
+    "content": "wer",
+    "image": "/uploads/1740137618089-Screenshot 2023-03-08 154815.png",
+    "video": null,
+    "createdAt": "21.2.2025"
+  },
+  {
+    "id": 1740137679502,
+    "title": "test5",
+    "content": "ggg",
+    "image": "/uploads/1740137679491-Screenshot 2023-03-16 080754.png",
+    "video": null,
+    "createdAt": "21.2.2025"
+  },
+  {
+    "id": 1740138121649,
+    "title": "test",
+    "content": "video test",
+    "image": null,
+    "video": "/uploads/1740138121594-WIN_20230713_10_04_51_Pro.mp4",
+    "createdAt": "21.2.2025"
+  },
+  {
+    "id": 1740139887079,
+    "title": "testaufzeihnung",
+    "content": "fsf",
+    "image": null,
+    "video": "/uploads/1740139887068-2023-05-30 16-28-27.mkv",
+    "createdAt": "21.2.2025"
+  },
+  {
+    "id": 1740140567360,
+    "title": "zwischenstand",
+    "content": "bilder und video upload klappt",
+    "image": "/uploads/1740140567341-WIN_20221025_22_03_56_Pro.jpg",
+    "video": "/uploads/1740140567350-2023-05-30 16-28-27.mkv",
+    "createdAt": "21.2.2025"
   }
 ]

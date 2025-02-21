@@ -11,14 +11,25 @@
     <button id="logout-btn">Logout</button>
     
     <h2>News erstellen</h2>
-    <form id="newsForm">
+    <form id="newsForm" enctype="multipart/form-data">
         <input type="hidden" id="news-id">
         <label for="title">Titel:</label>
         <input type="text" id="title" required>
+        
         <label for="content">Inhalt:</label>
         <textarea id="content" required></textarea>
+        
+        <label for="image">Bild hochladen:</label>
+        <input type="file" id="image" accept="image/png, image/jpeg, image/jpg, image/gif">
+    
+        <label for="video">Video hochladen:</label>
+        <input type="file" id="video" accept="video/mp4, video/webm, video/ogg, video/x-matroska">
+        
+    
         <button type="submit">Speichern</button>
     </form>
+    
+    
     
     <h2>Bestehende News</h2>
     <ul id="news-list"></ul>

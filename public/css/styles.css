@@ -156,3 +156,14 @@ button:hover {
     margin-top: 5px;
     display: block;
 }
+.news-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+}
+
+.news-video {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+}

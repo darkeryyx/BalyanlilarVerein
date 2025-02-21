@@ -5,8 +5,9 @@ const { parse } = require("dotenv");
 const env = parse(readFileSync(resolve(process.cwd(), "process.env")));
 const express = require('express');
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" })); // Erhöht die maximale JSON-Größe für große Uploads
+app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Erlaubt größere Anfragen
+
 
 const path = require('path');
 const session = require('express-session');
@@ -15,6 +16,44 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
 //const newsFile = resolve("news.json");
+
+const multer = require("multer");
+
+// Speicherort für Uploads festlegen
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "public/uploads/");
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
+});
+
+// Filter für erlaubte Dateitypen (nur Bilder & Videos)
+const fileFilter = (req, file, cb) => {
+  const allowedMimeTypes = [
+      "image/png", "image/jpeg", "image/jpg", "image/gif",
+      "video/mp4", "video/webm", "video/ogg", "video/x-matroska" // MKV hinzufügen
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+  } else {
+      cb(new Error("Nur Bild- und Videoformate (MP4, MKV, WEBM, OGG) erlaubt!"), false);
+  }
+};
+
+
+// Multer Middleware für einzelne Datei
+const upload = multer({ storage: storage, fileFilter: fileFilter });
+
+// Sicherstellen, dass der Upload-Ordner existiert
+const fs = require("fs");
+const uploadDir = "public/uploads/";
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 
 // Sicherheits-Header aktivieren mit spezifischen Richtlinien
 app.use(helmet({
@@ -57,6 +96,8 @@ app.use(session({
 app.use(express.json());  
 app.use(express.urlencoded({ extended: true }));  
 app.use(express.static(path.join(__dirname, 'public')));
+app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+
 
 // Admin-Login mit Rate-Limiting
 app.post('/admin-login', loginLimiter, (req, res) => {
@@ -107,8 +148,6 @@ app.get('/', (req, res) => {
 app.get('/adminDashboard', isAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
 });
-
-const fs = require("fs");
 
 app.use(express.json());
 
@@ -183,19 +222,19 @@ app.get("/news", (req, res) => {
 });
 
 // Route: Neue News hinzufügen
-app.post("/news", (req, res) => {
-  let news = loadNews();
+app.post("/news", upload.fields([{ name: "image" }, { name: "video" }]), (req, res) => {
+  console.log("📥 POST-Anfrage erhalten:", req.body);
+  console.log("📂 Hochgeladene Dateien:", req.files);
 
-  // Prüfe, ob bereits eine News mit dem gleichen Titel existiert (Verhindert doppelte Einträge)
-  if (news.some(n => n.title === req.body.title && n.content === req.body.content)) {
-      return res.status(400).json({ error: "Diese News existiert bereits!" });
-  }
+  let news = loadNews();
 
   const newArticle = {
       id: Date.now(),
       title: req.body.title,
       content: req.body.content,
-      createdAt: new Date().toLocaleDateString("de-DE") // Aktuelles Datum hinzufügen
+      image: req.files["image"] ? `/uploads/${req.files["image"][0].filename}` : null,
+      video: req.files["video"] ? `/uploads/${req.files["video"][0].filename}` : null,
+      createdAt: new Date().toLocaleDateString("de-DE")
   };
 
   news.push(newArticle);
@@ -204,6 +243,9 @@ app.post("/news", (req, res) => {
   console.log("✅ News erfolgreich gespeichert:", newArticle);
   res.status(201).json(newArticle);
 });
+
+
+
 
 
 

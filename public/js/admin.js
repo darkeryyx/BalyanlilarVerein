@@ -113,44 +113,41 @@ function editNews(id, title, content) {
 document.getElementById("newsForm").addEventListener("submit", async function(event) {
     event.preventDefault();
 
-    const id = document.getElementById("news-id").value.trim();
     const title = document.getElementById("title").value.trim();
     const content = document.getElementById("content").value.trim();
+    const image = document.getElementById("image").files[0];
+    const video = document.getElementById("video").files[0];
 
     if (!title || !content) {
         alert("Bitte Titel und Inhalt eingeben!");
         return;
     }
 
-    // Disable Submit-Button, um mehrfaches Absenden zu verhindern
-    const submitButton = event.target.querySelector("button[type='submit']");
-    submitButton.disabled = true;
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+    if (image) formData.append("image", image);
+    if (video) formData.append("video", video);
 
     try {
-        const method = id ? "PUT" : "POST";
-        const url = id ? `/news/${id}` : "/news";
-
-        console.log(`📤 Sende ${method}-Request an ${url}:`, { title, content });
-
-        const response = await fetch(url, {
-            method: method,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content })
+        const response = await fetch("/news", {
+            method: "POST",
+            body: formData
         });
 
-        if (!response.ok) throw new Error(`Fehler beim ${id ? "Aktualisieren" : "Speichern"} der News`);
+        if (!response.ok) throw new Error("Fehler beim Speichern der News");
 
-        console.log(`✅ News ${id ? "aktualisiert" : "gespeichert"}!`);
+        console.log("✅ News erfolgreich gespeichert!");
+        document.getElementById("newsForm").reset();
+        await fetchNews();
     } catch (error) {
         console.error("❌ Fehler beim Speichern der News:", error);
-    } finally {
-        // Submit-Button wieder aktivieren & Formular zurücksetzen
-        submitButton.disabled = false;
-        document.getElementById("newsForm").reset();
-        document.getElementById("news-id").value = ""; 
-        await fetchNews();
     }
 });
+
+
+
+
 
 
 fetchNews();

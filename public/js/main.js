@@ -11,10 +11,9 @@ async function fetchNews() {
             li.innerHTML = `
                 <h3>${item.title}</h3>
                 <p>${item.content}</p>
-                <small class="news-date">
-                    Erstellt am: ${item.createdAt || "Unbekannt"}
-                    ${item.updatedAt ? `<br>Letzte Änderung: ${item.updatedAt}` : ""}
-                </small>
+                ${item.image ? `<img src="${item.image}" class="news-image" alt="News Bild">` : ""}
+                ${item.video ? `<video controls class="news-video"><source src="${item.video}" type="video/mp4"></video>` : ""}
+                <small class="news-date">Erstellt am: ${item.createdAt || "Unbekannt"}</small>
             `;
             newsList.appendChild(li);
         });

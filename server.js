@@ -45,7 +45,11 @@ const fileFilter = (req, file, cb) => {
 
 
 // Multer Middleware für einzelne Datei
-const upload = multer({ storage: storage, fileFilter: fileFilter });
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter
+});
+
 
 // Sicherstellen, dass der Upload-Ordner existiert
 const fs = require("fs");
@@ -222,9 +226,19 @@ app.get("/news", (req, res) => {
 });
 
 // Route: Neue News hinzufügen
-app.post("/news", upload.fields([{ name: "image" }, { name: "video" }]), (req, res) => {
+// Route: Neue News hinzufügen
+app.post("/news", upload.array("media", 10), (req, res) => {
   console.log("📥 POST-Anfrage erhalten:", req.body);
-  console.log("📂 Hochgeladene Dateien:", req.files);
+  console.log("📂 Hochgeladene Dateien:", req.files ? req.files.map(file => file.filename) : "Keine");
+
+  // **Prüfung: Wenn kein Titel oder Inhalt vorhanden ist, breche ab**
+  if (!req.body.title || !req.body.content) {
+      console.error("❌ Titel oder Inhalt fehlen!");
+      return res.status(400).json({ error: "Titel und Inhalt sind erforderlich!" });
+  }
+
+  // **Prüfung: Wurden Dateien hochgeladen?**
+  const mediaUrls = req.files.length > 0 ? req.files.map(file => `/uploads/${file.filename}`) : [];
 
   let news = loadNews();
 
@@ -232,8 +246,7 @@ app.post("/news", upload.fields([{ name: "image" }, { name: "video" }]), (req, r
       id: Date.now(),
       title: req.body.title,
       content: req.body.content,
-      image: req.files["image"] ? `/uploads/${req.files["image"][0].filename}` : null,
-      video: req.files["video"] ? `/uploads/${req.files["video"][0].filename}` : null,
+      media: mediaUrls, 
       createdAt: new Date().toLocaleDateString("de-DE")
   };
 

@@ -3,24 +3,37 @@ async function fetchNews() {
         const response = await fetch("/news");
         if (!response.ok) throw new Error("Fehler beim Abrufen der News");
         const news = await response.json();
-        const newsList = document.getElementById("news-list");
-        newsList.innerHTML = "";
+        const newsContainer = document.getElementById("news-container");
+        newsContainer.innerHTML = "";
 
         news.forEach(item => {
-            const li = document.createElement("li");
-            li.innerHTML = `
-                <h3>${item.title}</h3>
+            const article = document.createElement("article");
+            article.innerHTML = `
+                <h2>${item.title}</h2>
                 <p>${item.content}</p>
-                ${item.image ? `<img src="${item.image}" class="news-image" alt="News Bild">` : ""}
-                ${item.video ? `<video controls class="news-video"><source src="${item.video}" type="video/mp4"></video>` : ""}
-                <small class="news-date">Erstellt am: ${item.createdAt || "Unbekannt"}</small>
+                <small>Erstellt am: ${item.createdAt}</small>
             `;
-            newsList.appendChild(li);
+
+            // **Bilder/Videos anzeigen**
+            if (item.media && item.media.length > 0) {
+                item.media.forEach(mediaUrl => {
+                    const mediaElement = document.createElement(mediaUrl.endsWith(".mp4") ? "video" : "img");
+                    mediaElement.src = mediaUrl;
+                    mediaElement.style.maxWidth = "100%";
+                    if (mediaUrl.endsWith(".mp4")) {
+                        mediaElement.controls = true;
+                    }
+                    article.appendChild(mediaElement);
+                });
+            }
+
+            newsContainer.appendChild(article);
         });
 
     } catch (error) {
         console.error("Fehler beim Abrufen der News:", error);
     }
 }
+
 
 window.onload = fetchNews;

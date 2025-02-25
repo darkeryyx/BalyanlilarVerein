@@ -24,6 +24,18 @@ async function fetchNews() {
                 <button class="save-btn" data-id="${item.id}" style="display:none;">💾 Speichern</button>
                 <button class="delete-btn" data-id="${item.id}">🗑 Löschen</button>
             `;
+            if (item.media && item.media.length > 0) {
+                item.media.forEach(mediaUrl => {
+                    const mediaElement = document.createElement(mediaUrl.endsWith(".mp4") ? "video" : "img");
+                    mediaElement.src = mediaUrl;
+                    mediaElement.style.maxWidth = "300px";  // Optional: Größe begrenzen
+                    if (mediaUrl.endsWith(".mp4")) {
+                        mediaElement.controls = true;
+                    }
+                    li.appendChild(mediaElement);
+                });
+            }
+            
             newsList.appendChild(li);
         });
 
@@ -115,8 +127,7 @@ document.getElementById("newsForm").addEventListener("submit", async function(ev
 
     const title = document.getElementById("title").value.trim();
     const content = document.getElementById("content").value.trim();
-    const image = document.getElementById("image").files[0];
-    const video = document.getElementById("video").files[0];
+    const mediaFiles = document.getElementById("media").files;
 
     if (!title || !content) {
         alert("Bitte Titel und Inhalt eingeben!");
@@ -126,13 +137,19 @@ document.getElementById("newsForm").addEventListener("submit", async function(ev
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content", content);
-    if (image) formData.append("image", image);
-    if (video) formData.append("video", video);
+
+    // Alle Dateien aus dem File-Input in FormData packen
+    for (const file of mediaFiles) {
+        formData.append("media", file);
+        console.log(`📂 Datei hinzugefügt: ${file.name}`);
+    }
+
+    console.log("📤 Sende FormData an Server...", [...formData.entries()]);
 
     try {
         const response = await fetch("/news", {
             method: "POST",
-            body: formData
+            body: formData // KEIN `Content-Type` setzen!
         });
 
         if (!response.ok) throw new Error("Fehler beim Speichern der News");
@@ -144,9 +161,6 @@ document.getElementById("newsForm").addEventListener("submit", async function(ev
         console.error("❌ Fehler beim Speichern der News:", error);
     }
 });
-
-
-
 
 
 

@@ -1,4 +1,4 @@
-document.getElementById("logout-btn").addEventListener("click", async () => {
+/*document.getElementById("logout-btn").addEventListener("click", async () => {
     await fetch("/admin-logout", { method: "POST" });
     window.location.href = "/admin.html"; 
 });
@@ -165,3 +165,4 @@ document.getElementById("newsForm").addEventListener("submit", async function(ev
 
 
 fetchNews();
+*/

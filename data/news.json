@@ -1,20 +1,32 @@
 [
   {
-    "id": 1739225109793,
-    "title": "News1",
-    "content": "test eins nur mit text und editing",
-    "updatedAt": "25.2.2025"
+    "id": 1740694478280,
+    "title": "dd",
+    "content": "d",
+    "media": [
+      "/uploads/1740694478264-Screenshot 2023-03-16 080754.png"
+    ],
+    "createdAt": "27.2.2025"
   },
   {
-    "id": 1740509045087,
-    "title": "test2 mit dateien",
-    "content": "test2",
+    "id": 1740694490537,
+    "title": "c",
+    "content": "c",
     "media": [
-      "/uploads/1740509044361-WIN_20221025_22_03_56_Pro.jpg",
-      "/uploads/1740509044370-WIN_20230713_10_04_51_Pro.mp4",
-      "/uploads/1740509044464-WIN_20230713_10_04_58_Pro.mp4",
-      "/uploads/1740509044798-WIN_20240207_09_49_50_Pro.mp4"
+      "/uploads/1740694490526-Screenshot 2023-03-29 180503.png"
     ],
-    "createdAt": "25.2.2025"
+    "createdAt": "27.2.2025"
+  },
+  {
+    "id": 1740694515346,
+    "title": "c",
+    "content": "v",
+    "media": [
+      "/uploads/1740694514414-WIN_20230713_10_04_58_Pro.mp4",
+      "/uploads/1740694514741-WIN_20230713_10_05_39_Pro.mp4",
+      "/uploads/1740694515077-WIN_20230713_10_57_41_Pro.mp4",
+      "/uploads/1740694515264-WIN_20230713_10_58_24_Pro.mp4"
+    ],
+    "createdAt": "27.2.2025"
   }
 ]

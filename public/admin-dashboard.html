@@ -39,26 +39,58 @@
         });
 
         async function fetchNews() {
-            try {
-                const response = await fetch("/news");
-                if (!response.ok) throw new Error("Fehler beim Abrufen der News");
-                const news = await response.json();
-                const newsList = document.getElementById("news-list");
-                newsList.innerHTML = "";
-                news.forEach(item => {
-                    const li = document.createElement("li");
-                    li.innerHTML = `
-                        <h3>${item.title}</h3>
-                        <p>${item.content}</p>
-                        <button onclick="editNews(${item.id}, '${item.title}', '${item.content}')">Bearbeiten</button>
-                        <button onclick="deleteNews(${item.id})">Löschen</button>
-                    `;
-                    newsList.appendChild(li);
+    try {
+        const response = await fetch("/news");
+        if (!response.ok) throw new Error("Fehler beim Abrufen der News");
+        const news = await response.json();
+        const newsList = document.getElementById("news-list");
+        newsList.innerHTML = "";
+
+        news.forEach(item => {
+            let mediaElements = '';
+            if (item.media && item.media.length > 0) {
+                item.media.forEach(mediaUrl => {
+                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') || mediaUrl.toLowerCase().endsWith('.webm') || mediaUrl.toLowerCase().endsWith('.ogg');
+                    if (isVideo) {
+                        mediaElements += `<video src="${mediaUrl}" width="320" height="240" controls></video>`;
+                    } else {
+                        mediaElements += `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
+                    }
                 });
-            } catch (error) {
-                console.error("Fehler beim Abrufen der News:", error);
             }
-        }
+
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <h3>${item.title}</h3>
+                <p>${item.content}</p>
+                ${mediaElements}
+                <button class="edit-btn" data-id="${item.id}" data-title="${item.title}" data-content="${item.content}">Bearbeiten</button>
+                <button class="delete-btn" data-id="${item.id}">Löschen</button>
+            `;
+            newsList.appendChild(li);
+        });
+
+        // Event Listener hinzufügen, nachdem die News geladen wurden
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const title = this.dataset.title;
+                const content = this.dataset.content;
+                editNews(id, title, content);
+            });
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                deleteNews(id);
+            });
+        });
+    } catch (error) {
+        console.error("Fehler beim Abrufen der News:", error);
+    }
+}
+
         
         async function deleteNews(id) {
             try {
@@ -76,39 +108,52 @@
             document.getElementById("content").value = content;
         }
         
-        document.getElementById("newsForm").addEventListener("submit", async function(event) {
-    event.preventDefault();
+
+    document.getElementById("newsForm").addEventListener("submit", async function(event) {
+    event.preventDefault(); // WICHTIG: Verhindert das Standardverhalten des Formulars
     
     const title = document.getElementById("title").value.trim();
     const content = document.getElementById("content").value.trim();
+    const mediaFiles = document.getElementById("media").files;
 
     if (!title || !content) {
         alert("Bitte Titel und Inhalt eingeben!");
         return;
     }
 
-    console.log("📤 Sende News an Server:", { title, content }); // Debug-Log
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
 
-    try {
-        const response = await fetch("/news", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content })
-        });
+        // Alle Dateien aus dem File-Input in FormData packen
+        for (const file of mediaFiles) {
+            formData.append("media", file);
+            console.log(`📂 Datei hinzugefügt: ${file.name}`);
+        }
 
-        console.log("📡 Antwort vom Server erhalten:", response.status); // Debug-Log
+        console.log("📤 Sende FormData an Server...", [...formData.entries()]);
 
-        if (!response.ok) throw new Error("Fehler beim Speichern der News");
-        document.getElementById("newsForm").reset();
-        await fetchNews();
-    } catch (error) {
-        console.error("❌ Fehler beim Speichern der News:", error);
-    }
-});
+        try {
+            const response = await fetch("/news", {
+                method: "POST",
+                body: formData // KEIN `Content-Type` setzen!  Der Browser setzt den Content-Type automatisch auf 'multipart/form-data'
+            });
+            if (!response.ok) throw new Error("Fehler beim Speichern der News");
+
+
+            console.log("✅ News erfolgreich gespeichert!");
+            document.getElementById("newsForm").reset();
+            await fetchNews();
+
+        } catch (error) {
+            console.error("❌ Fehler beim Speichern der News:", error);
+        } 
+
+    });
 
 
         
-        fetchNews();
+        fetchNews(); 
     </script>
   
 

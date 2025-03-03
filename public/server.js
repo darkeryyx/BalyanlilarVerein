@@ -1,4 +1,4 @@
-const { readFileSync, writeFileSync } = require("fs");
+/**const { readFileSync, writeFileSync } = require("fs");
 const { resolve } = require("path");
 const { parse } = require("dotenv");
 
@@ -171,3 +171,4 @@ app.listen(port, () => {
 });
 console.log("Admin-Benutzername:", env.ADMIN_USERNAME );
 console.log("Admin-Passwort-Hash:", env.ADMIN_PASSWORD_HASH);
+*/

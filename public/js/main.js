@@ -3,37 +3,36 @@ async function fetchNews() {
         const response = await fetch("/news");
         if (!response.ok) throw new Error("Fehler beim Abrufen der News");
         const news = await response.json();
-        const newsContainer = document.getElementById("news-container");
-        newsContainer.innerHTML = "";
+        const newsList = document.getElementById("news-list"); // Korrekte ID
+
+        newsList.innerHTML = ""; // Leere die Liste, bevor neue News hinzugefügt werden
 
         news.forEach(item => {
-            const article = document.createElement("article");
-            article.innerHTML = `
-                <h2>${item.title}</h2>
-                <p>${item.content}</p>
-                <small>Erstellt am: ${item.createdAt}</small>
-            `;
-
-            // **Bilder/Videos anzeigen**
+            let mediaElements = '';
             if (item.media && item.media.length > 0) {
                 item.media.forEach(mediaUrl => {
-                    const mediaElement = document.createElement(mediaUrl.endsWith(".mp4") ? "video" : "img");
-                    mediaElement.src = mediaUrl;
-                    mediaElement.style.maxWidth = "100%";
-                    if (mediaUrl.endsWith(".mp4")) {
-                        mediaElement.controls = true;
+                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') || mediaUrl.toLowerCase().endsWith('.webm') || mediaUrl.toLowerCase().endsWith('.ogg');
+                    if (isVideo) {
+                        mediaElements += `<video src="${mediaUrl}" width="320" height="240" controls></video>`;
+                    } else {
+                        mediaElements += `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
                     }
-                    article.appendChild(mediaElement);
                 });
             }
 
-            newsContainer.appendChild(article);
+            const li = document.createElement("li");
+            li.innerHTML = `
+                <h3>${item.title}</h3>
+                <p>${item.content}</p>
+                ${mediaElements}
+                <small>Erstellt am: ${item.createdAt}</small>
+            `;
+            newsList.appendChild(li);
         });
 
     } catch (error) {
         console.error("Fehler beim Abrufen der News:", error);
     }
 }
-
 
 window.onload = fetchNews;

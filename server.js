@@ -180,24 +180,32 @@ if (!fs.existsSync(path.dirname(newsFile))) {
 
 // Funktion zum Laden der News
 function loadNews() {
-    try {
-        if (!fs.existsSync(newsFile)) {
-            console.warn("⚠ Datei existiert nicht. Erstelle neue news.json...");
-            fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
-        }
+  try {
+      if (!fs.existsSync(newsFile)) {
+          console.warn("⚠ Datei existiert nicht. Erstelle neue news.json...");
+          fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
+          return [];
+      }
 
-        let rawData = fs.readFileSync(newsFile, "utf8").trim();
-        if (!rawData || rawData.length < 2 || rawData.includes("�")) {
-            console.warn("⚠ Ungültiger Inhalt in news.json erkannt. Setze auf leere Liste...");
-            fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
-            return [];
-        }
+      const rawData = fs.readFileSync(newsFile, "utf8");
+      if (!rawData) {
+          console.warn("⚠ news.json ist leer.  Erstelle neue news.json...");
+          fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
+          return [];
+      }
 
-        return JSON.parse(rawData);
-    } catch (err) {
-        console.error("❌ Fehler beim Laden der News:", err);
-        return [];
-    }
+      try {
+          return JSON.parse(rawData);
+      } catch (parseError) {
+          console.error("❌ Fehler beim Parsen der News:", parseError);
+          console.warn("⚠ news.json ist korrupt.  Erstelle neue news.json...");
+          fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
+          return [];
+      }
+  } catch (err) {
+      console.error("❌ Fehler beim Laden der News:", err);
+      return [];
+  }
 }
 
 
@@ -205,16 +213,27 @@ function loadNews() {
 
 // Funktion zum Speichern der News
 function saveNews(news) {
-    try {
-        if (!Array.isArray(news)) {
-            throw new Error("❌ Ungültige Daten: News ist kein Array!");
-        }
+    return new Promise((resolve, reject) => {
+        try {
+            if (!Array.isArray(news)) {
+                reject(new Error("❌ Ungültige Daten: News ist kein Array!"));
+                return;
+            }
 
-        fs.writeFileSync(newsFile, JSON.stringify(news, null, 2), { encoding: "utf8" });
-        console.log("✅ News erfolgreich gespeichert!");
-    } catch (err) {
-        console.error("❌ Fehler beim Speichern der News:", err);
-    }
+            fs.writeFile(newsFile, JSON.stringify(news, null, 2), { encoding: "utf8" }, (err) => {
+                if (err) {
+                    console.error("❌ Fehler beim Speichern der News:", err);
+                    reject(err);
+                } else {
+                    console.log("✅ News erfolgreich gespeichert!");
+                    resolve();
+                }
+            });
+        } catch (err) {
+            console.error("❌ Fehler beim Speichern der News:", err);
+            reject(err);
+        }
+    });
 }
 
 
@@ -227,7 +246,7 @@ app.get("/news", (req, res) => {
 
 // Route: Neue News hinzufügen
 // Route: Neue News hinzufügen
-app.post("/news", upload.array("media", 10), (req, res) => {
+app.post("/news", upload.array("media", 10), async (req, res) => {
   console.log("📥 POST-Anfrage erhalten:", req.body);
   console.log("📂 Hochgeladene Dateien:", req.files ? req.files.map(file => file.filename) : "Keine");
 
@@ -238,8 +257,8 @@ app.post("/news", upload.array("media", 10), (req, res) => {
   }
 
   // **Prüfung: Wurden Dateien hochgeladen?**
-  const mediaUrls = req.files.length > 0 ? req.files.map(file => `/uploads/${file.filename}`) : [];
-
+  const mediaUrls = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+  
   let news = loadNews();
 
   const newArticle = {
@@ -251,10 +270,15 @@ app.post("/news", upload.array("media", 10), (req, res) => {
   };
 
   news.push(newArticle);
-  saveNews(news);
 
+  try {
+    await saveNews(news);
   console.log("✅ News erfolgreich gespeichert:", newArticle);
   res.status(201).json(newArticle);
+} catch (error) {
+  console.error("❌ Fehler beim Speichern der News:", error);
+  res.status(500).json({ error: "Fehler beim Speichern der News" });
+}
 });
 
 

@@ -16,26 +16,23 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 
 //const newsFile = resolve("news.json");
-
-const multer = require("multer");
-
-// Speicherort für Uploads festlegen
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, "public/uploads/");
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + "-" + file.originalname);
-    }
+// === Import und Konfiguration von Cloudinary ===
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: env.CLOUDINARY_CLOUD_NAME,
+  api_key: env.CLOUDINARY_API_KEY,
+  api_secret: env.CLOUDINARY_API_SECRET
 });
 
-// Filter für erlaubte Dateitypen (nur Bilder & Videos)
+// === Multer-Konfiguration: Speicher in den Arbeitsspeicher statt auf der Festplatte ===
+const multer = require("multer");
+// Statt diskStorage nutzen wir memoryStorage, damit wir die Datei-Buffer direkt an Cloudinary senden können.
+const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
       "image/png", "image/jpeg", "image/jpg", "image/gif",
       "video/mp4", "video/webm", "video/ogg", "video/x-matroska" // MKV hinzufügen
   ];
-
   if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
   } else {
@@ -43,12 +40,11 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-
-// Multer Middleware für einzelne Datei
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter
 });
+
 
 
 // Sicherstellen, dass der Upload-Ordner existiert
@@ -65,12 +61,15 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "trusted-scripts.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      mediaSrc: ["'self'", "https://res.cloudinary.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: []
     }
   },
   referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
+
 
 // Rate Limiting für Login-Versuche
 const loginLimiter = rateLimit({
@@ -246,40 +245,57 @@ app.get("/news", (req, res) => {
 
 // Route: Neue News hinzufügen
 // Route: Neue News hinzufügen
+// Route: Neue News hinzufügen mit Cloudinary-Upload
 app.post("/news", upload.array("media", 10), async (req, res) => {
   console.log("📥 POST-Anfrage erhalten:", req.body);
-  console.log("📂 Hochgeladene Dateien:", req.files ? req.files.map(file => file.filename) : "Keine");
+  console.log("📂 Hochgeladene Dateien:", req.files ? req.files.map(file => file.originalname) : "Keine");
 
-  // **Prüfung: Wenn kein Titel oder Inhalt vorhanden ist, breche ab**
+  // Prüfung: Titel und Inhalt müssen vorhanden sein
   if (!req.body.title || !req.body.content) {
       console.error("❌ Titel oder Inhalt fehlen!");
       return res.status(400).json({ error: "Titel und Inhalt sind erforderlich!" });
   }
 
-  // **Prüfung: Wurden Dateien hochgeladen?**
-  const mediaUrls = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
-  
-  let news = loadNews();
-
-  const newArticle = {
-      id: Date.now(),
-      title: req.body.title,
-      content: req.body.content,
-      media: mediaUrls, 
-      createdAt: new Date().toLocaleDateString("de-DE")
-  };
-
-  news.push(newArticle);
-
   try {
-    await saveNews(news);
-  console.log("✅ News erfolgreich gespeichert:", newArticle);
-  res.status(201).json(newArticle);
-} catch (error) {
-  console.error("❌ Fehler beim Speichern der News:", error);
-  res.status(500).json({ error: "Fehler beim Speichern der News" });
-}
+      // Lade alle Dateien zu Cloudinary hoch
+      const uploadPromises = req.files.map(file => {
+          return new Promise((resolve, reject) => {
+              const uploadStream = cloudinary.uploader.upload_stream(
+                  { resource_type: 'auto' }, // Automatische Erkennung des Dateityps (z.B. Bild oder Video)
+                  (error, result) => {
+                      if (error) {
+                          console.error("❌ Cloudinary Upload Error:", error);
+                          return reject(error);
+                      }
+                      resolve(result.secure_url);
+                  }
+              );
+              uploadStream.end(file.buffer);
+          });
+      });
+
+      const mediaUrls = req.files.length > 0 ? await Promise.all(uploadPromises) : [];
+      
+      let news = loadNews();
+      const newArticle = {
+          id: Date.now(),
+          title: req.body.title,
+          content: req.body.content,
+          media: mediaUrls, 
+          createdAt: new Date().toLocaleDateString("de-DE")
+      };
+
+      news.push(newArticle);
+
+      await saveNews(news);
+      console.log("✅ News erfolgreich gespeichert:", newArticle);
+      res.status(201).json(newArticle);
+  } catch (error) {
+      console.error("❌ Fehler beim Hochladen der Dateien oder beim Speichern der News:", error);
+      res.status(500).json({ error: "Fehler beim Hochladen der Dateien oder beim Speichern der News" });
+  }
 });
+
 
 
 

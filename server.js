@@ -301,14 +301,76 @@ app.post("/news", upload.array("media", 10), async (req, res) => {
 
 
 
-
+/*
 // Route: News löschen
 app.delete("/news/:id", (req, res) => {
     let news = loadNews();
     news = news.filter(n => n.id != req.params.id);
     saveNews(news);
     res.json({ message: "✅ News gelöscht" });
+});*/
+// Helferfunktion, um den Public-ID aus der Cloudinary-URL zu extrahieren
+function extractPublicId(url) {
+  // Beispiel-URL: 
+  // https://res.cloudinary.com/da1r1e6gi/image/upload/v1741043333/jvtoz8vpmy4hw7xfu7yy.png
+  const uploadIndex = url.indexOf("/upload/");
+  if (uploadIndex === -1) return null;
+  let pathPart = url.substring(uploadIndex + 8); // alles nach "/upload/"
+  // Falls vorhanden, entferne die Versionsnummer (z. B. "v1741043333")
+  const parts = pathPart.split("/");
+  if (parts[0].startsWith("v")) {
+    parts.shift();
+  }
+  // Setze alle Teile wieder zusammen (falls dein Public-ID Ordnerstrukturen enthält)
+  let publicIdWithExt = parts.join("/");
+  // Entferne die Dateiendung
+  const dotIndex = publicIdWithExt.lastIndexOf(".");
+  if (dotIndex !== -1) {
+    return publicIdWithExt.substring(0, dotIndex);
+  }
+  return publicIdWithExt;
+}
+
+// Helferfunktion, um den Ressourcentyp zu bestimmen
+function extractResourceType(url) {
+  if (url.includes("/video/upload/")) return "video";
+  if (url.includes("/image/upload/")) return "image";
+  return "image"; // Fallback
+}
+
+// Angepasste DELETE-Route: Löscht die News und die zugehörigen Dateien in Cloudinary
+app.delete("/news/:id", async (req, res) => {
+  let news = loadNews();
+  // Finde den zu löschenden Artikel
+  const newsToDelete = news.find(n => n.id == req.params.id);
+  if (!newsToDelete) {
+    return res.status(404).json({ error: "Artikel nicht gefunden" });
+  }
+
+  // Lösche alle in diesem Artikel gespeicherten Cloudinary-Dateien
+  if (newsToDelete.media && newsToDelete.media.length > 0) {
+    await Promise.all(newsToDelete.media.map(async (url) => {
+      const publicId = extractPublicId(url);
+      const resourceType = extractResourceType(url);
+      if (publicId) {
+        try {
+          const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+          console.log("Cloudinary deletion result:", result);
+        } catch (error) {
+          console.error("Fehler beim Löschen der Datei in Cloudinary:", error);
+        }
+      }
+    }));
+  }
+
+  // Entferne den Artikel aus der News-Liste und speichere die Datei
+  const filteredNews = news.filter(n => n.id != req.params.id);
+  await saveNews(filteredNews);
+
+  console.log("🗑 News gelöscht mit ID:", req.params.id);
+  res.json({ message: "News gelöscht" });
 });
+
 
 // Server starten
 const PORT = 3000;
@@ -339,7 +401,7 @@ app.put("/news/:id", (req, res) => {
   res.json(news[index]);
 });
 
-
+/*
 // News löschen
 app.delete("/news/:id", (req, res) => {
     let news = loadNews();
@@ -353,7 +415,7 @@ app.delete("/news/:id", (req, res) => {
     
     console.log("🗑 News gelöscht mit ID:", req.params.id);
     res.json({ message: "News gelöscht" });
-});
+});*/
 
 
 

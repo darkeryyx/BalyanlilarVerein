@@ -1,12 +1,10 @@
 [
   {
-    "id": 1741194493641,
-    "title": "test2",
-    "content": "testen von ladebalken",
-    "media": [
-      "https://res.cloudinary.com/da1r1e6gi/video/upload/v1741194493/sijgqtspt4vndxigj1in.mkv",
-      "https://res.cloudinary.com/da1r1e6gi/image/upload/v1741194493/eay4o2g1utjd5ukazmwk.png"
-    ],
-    "createdAt": "5.3.2025"
+    "id": 1741293531052,
+    "title": "test1",
+    "content": "1",
+    "media": [],
+    "createdAt": "6.3.2025",
+    "updatedAt": "9.3.2025"
   }
 ]

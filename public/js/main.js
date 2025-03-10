@@ -11,7 +11,10 @@ async function fetchNews() {
             let mediaElements = '';
             if (item.media && item.media.length > 0) {
                 item.media.forEach(mediaUrl => {
-                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') || mediaUrl.toLowerCase().endsWith('.webm') || mediaUrl.toLowerCase().endsWith('.ogg');
+                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
+                    mediaUrl.toLowerCase().endsWith('.webm') ||
+                    mediaUrl.toLowerCase().endsWith('.ogg') ||
+                    mediaUrl.toLowerCase().endsWith('.mkv');
                     if (isVideo) {
                         mediaElements += `<video src="${mediaUrl}" width="320" height="240" controls></video>`;
                     } else {

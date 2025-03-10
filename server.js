@@ -5,212 +5,194 @@ const { parse } = require("dotenv");
 const env = parse(readFileSync(resolve(process.cwd(), "process.env")));
 const express = require('express');
 const app = express();
-app.use(express.json({ limit: "50mb" })); // Erhöht die maximale JSON-Größe für große Uploads
-app.use(express.urlencoded({ extended: true, limit: "50mb" })); // Erlaubt größere Anfragen
-
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const cors = require('cors');
 
-//const newsFile = resolve("news.json");
-// === Import und Konfiguration von Cloudinary ===
+// Add this before your routes
+app.use(cors({
+  origin: true,  // Allow same-origin requests
+  credentials: true  // Allow cookies to be sent with requests
+}));
+
 const cloudinary = require('cloudinary').v2;
+
 cloudinary.config({
-  cloud_name: env.CLOUDINARY_CLOUD_NAME,
-  api_key: env.CLOUDINARY_API_KEY,
-  api_secret: env.CLOUDINARY_API_SECRET
+    cloud_name: env.CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+    secure: true
 });
 
-// === Multer-Konfiguration: Speicher in den Arbeitsspeicher statt auf der Festplatte ===
 const multer = require("multer");
-// Statt diskStorage nutzen wir memoryStorage, damit wir die Datei-Buffer direkt an Cloudinary senden können.
-const storage = multer.memoryStorage();
-const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = [
-      "image/png", "image/jpeg", "image/jpg", "image/gif",
-      "video/mp4", "video/webm", "video/ogg", "video/x-matroska" // MKV hinzufügen
-  ];
-  if (allowedMimeTypes.includes(file.mimetype)) {
-      cb(null, true);
-  } else {
-      cb(new Error("Nur Bild- und Videoformate (MP4, MKV, WEBM, OGG) erlaubt!"), false);
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter
-});
-
-
-
-// Sicherstellen, dass der Upload-Ordner existiert
+// Temporäres Upload-Verzeichnis
+const uploadDir = path.join(__dirname, 'tmp_uploads');
+// Sicherstellen, dass das Verzeichnis existiert
 const fs = require("fs");
-const uploadDir = "public/uploads/";
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-
-// Sicherheits-Header aktivieren mit spezifischen Richtlinien
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "trusted-scripts.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      mediaSrc: ["'self'", "https://res.cloudinary.com"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: []
+// Multer-Konfiguration für diskStorage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
-  },
-  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
-}));
-
-
-// Rate Limiting für Login-Versuche
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 Minuten
-  max: 5, // Maximal 5 Versuche pro IP
-  message: 'Zu viele Anmeldeversuche, bitte später erneut versuchen.'
 });
 
-// Admin-Zugangsdaten aus Umgebungsvariablen laden
+const fileFilter = (req, file, cb) => {
+    const allowedMimeTypes = [
+        "image/png", "image/jpeg", "image/jpg", "image/gif",
+        "video/mp4", "video/webm", "video/ogg", "video/x-matroska"
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error("Nur Bild- und Videoformate (MP4, MKV, WEBM, OGG) erlaubt!"), false);
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 250 * 1024 * 1024 // 250MB
+    }
+});
+
+app.use(helmet({
+  contentSecurityPolicy: {
+      directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          connectSrc: ["'self'", "https://res.cloudinary.com"],
+          imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+          mediaSrc: ["'self'", "https://res.cloudinary.com"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: []
+      }
+  },
+  referrerPolicy: { policy: "same-origin" }  // Changed from strict-origin-when-cross-origin
+}));
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: 'Zu viele Anmeldeversuche, bitte später erneut versuchen.'
+});
+
 const admin = {
     username: env.ADMIN_USERNAME,
     passwordHash: env.ADMIN_PASSWORD_HASH
 };
 
-// Sicherere Session-Einstellungen
 app.use(session({
-  secret: env.SESSION_SECRET || 'supersecurekey',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production', // Setze auf true, wenn HTTPS verwendet wird
-    maxAge: 60 * 60 * 1000 // 1 Stunde
-  }
+    secret: env.SESSION_SECRET || 'supersecurekey',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 1000
+    }
 }));
 
-app.use(express.json());  
-app.use(express.urlencoded({ extended: true }));  
 app.use(express.static(path.join(__dirname, 'public')));
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
-
-// Admin-Login mit Rate-Limiting
 app.post('/admin-login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
-  
-    if (username !== admin.username) {
-      return res.status(401).send('Ungültiger Benutzername');
-    }
-  
-    bcrypt.compare(password, admin.passwordHash, (err, isMatch) => {
-      if (err) {
-        return res.status(500).send('Fehler beim Überprüfen des Passworts');
-      }
-  
-      if (!isMatch) {
-        return res.status(401).send('Ungültige Anmeldedaten');
-      }
-  
-      req.session.user = { username };
-      res.redirect('/adminDashboard'); 
-    });
-  });
 
-// Middleware zur Admin-Authentifizierung
+    if (username !== admin.username) {
+        return res.status(401).send('Ungültiger Benutzername');
+    }
+
+    bcrypt.compare(password, admin.passwordHash, (err, isMatch) => {
+        if (err) {
+            return res.status(500).send('Fehler beim Überprüfen des Passworts');
+        }
+
+        if (!isMatch) {
+            return res.status(401).send('Ungültige Anmeldedaten');
+        }
+
+        req.session.user = { username };
+        res.redirect('/adminDashboard');
+    });
+});
+
 function isAdmin(req, res, next) {
-  if (req.session.user && req.session.user.username === admin.username) {
-    return next();
-  }
-  res.status(403).send({ message: 'Zugriff verweigert. Admin bitte einloggen.' });
+    if (req.session.user && req.session.user.username === admin.username) {
+        return next();
+    }
+    res.status(403).send({ message: 'Zugriff verweigert. Admin bitte einloggen.' });
 }
 
-// Logout-Funktion
 app.post('/admin-logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      return res.status(500).send('Fehler beim Abmelden');
-    }
-    res.send({ message: 'Erfolgreich abgemeldet' });
-  });
+    req.session.destroy(err => {
+        if (err) {
+            return res.status(500).send('Fehler beim Abmelden');
+        }
+        res.send({ message: 'Erfolgreich abgemeldet' });
+    });
 });
 
-// Startseite
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Admin-Seite
 app.get('/adminDashboard', isAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
+    res.sendFile(path.join(__dirname, 'public', 'admin-dashboard.html'));
 });
 
 app.use(express.json());
 
 const newsFile = path.join(__dirname, "data", "news.json");
 
-// Sicherstellen, dass der data-Ordner existiert
 if (!fs.existsSync(path.dirname(newsFile))) {
     fs.mkdirSync(path.dirname(newsFile), { recursive: true });
 }
-//das überprüft net ob zwei gleiche titel existieren, vllt das nötig falls die news mit gleichem titel erstellen wollen
-/*app.post("/news", (req, res) => {
-    console.log("📥 POST-Anfrage erhalten:", req.body); // Debug-Log
-    let news = loadNews();
-    const newArticle = { id: Date.now(), title: req.body.title, content: req.body.content };
 
-    if (!newArticle.title || !newArticle.content) {
-        return res.status(400).json({ error: "Titel und Inhalt sind erforderlich!" });
-    }
-
-    news.push(newArticle);
-    saveNews(news);
-
-    console.log("📝 News gespeichert:", newArticle); // Debug-Log
-    res.status(201).json(newArticle);
-});*/
-
-// Funktion zum Laden der News
 function loadNews() {
-  try {
-      if (!fs.existsSync(newsFile)) {
-          console.warn("⚠ Datei existiert nicht. Erstelle neue news.json...");
-          fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
-          return [];
-      }
+    try {
+        if (!fs.existsSync(newsFile)) {
+            console.warn("⚠ Datei existiert nicht. Erstelle neue news.json...");
+            fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
+            return [];
+        }
 
-      const rawData = fs.readFileSync(newsFile, "utf8");
-      if (!rawData) {
-          console.warn("⚠ news.json ist leer.  Erstelle neue news.json...");
-          fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
-          return [];
-      }
+        const rawData = fs.readFileSync(newsFile, "utf8");
+        if (!rawData) {
+            console.warn("⚠ news.json ist leer.  Erstelle neue news.json...");
+            fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
+            return [];
+        }
 
-      try {
-          return JSON.parse(rawData);
-      } catch (parseError) {
-          console.error("❌ Fehler beim Parsen der News:", parseError);
-          console.warn("⚠ news.json ist korrupt.  Erstelle neue news.json...");
-          fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
-          return [];
-      }
-  } catch (err) {
-      console.error("❌ Fehler beim Laden der News:", err);
-      return [];
-  }
+        try {
+            return JSON.parse(rawData);
+        } catch (parseError) {
+            console.error("❌ Fehler beim Parsen der News:", parseError);
+            console.warn("⚠ news.json ist korrupt.  Erstelle neue news.json...");
+            fs.writeFileSync(newsFile, "[]", { encoding: "utf8" });
+            return [];
+        }
+    } catch (err) {
+        console.error("❌ Fehler beim Laden der News:", err);
+        return [];
+    }
 }
 
-
-
-
-// Funktion zum Speichern der News
 function saveNews(news) {
     return new Promise((resolve, reject) => {
         try {
@@ -235,53 +217,79 @@ function saveNews(news) {
     });
 }
 
-
-
-
-// Route: Alle News abrufen
 app.get("/news", (req, res) => {
     res.json(loadNews());
 });
 
-// Route: Neue News hinzufügen
-// Route: Neue News hinzufügen
-// Route: Neue News hinzufügen mit Cloudinary-Upload
+// Hilfsfunktion zum Löschen von Dateien
+const deleteFile = (filePath) => {
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error("Fehler beim Löschen der temporären Datei:", err);
+        } else {
+            console.log("Temporäre Datei gelöscht:", filePath);
+        }
+    });
+};
+
+// Modified POST route for news with fixed upload handling
 app.post("/news", upload.array("media", 10), async (req, res) => {
   console.log("📥 POST-Anfrage erhalten:", req.body);
   console.log("📂 Hochgeladene Dateien:", req.files ? req.files.map(file => file.originalname) : "Keine");
 
-  // Prüfung: Titel und Inhalt müssen vorhanden sein
   if (!req.body.title || !req.body.content) {
       console.error("❌ Titel oder Inhalt fehlen!");
       return res.status(400).json({ error: "Titel und Inhalt sind erforderlich!" });
   }
 
   try {
-      // Lade alle Dateien zu Cloudinary hoch
-      const uploadPromises = req.files.map(file => {
-          return new Promise((resolve, reject) => {
-              const uploadStream = cloudinary.uploader.upload_stream(
-                  { resource_type: 'auto' }, // Automatische Erkennung des Dateityps (z.B. Bild oder Video)
-                  (error, result) => {
-                      if (error) {
-                          console.error("❌ Cloudinary Upload Error:", error);
-                          return reject(error);
-                      }
-                      resolve(result.secure_url);
-                  }
-              );
-              uploadStream.end(file.buffer);
-          });
-      });
-
-      const mediaUrls = req.files.length > 0 ? await Promise.all(uploadPromises) : [];
+      // Process files one by one to avoid duplicate uploads
+      const mediaUrls = [];
       
+      if (req.files && req.files.length > 0) {
+          for (const file of req.files) {
+              try {
+                  // Use a Promise to handle each file upload
+                  const result = await new Promise((resolve, reject) => {
+                      // For large files, specify a resource_type based on mimetype
+                      const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+                      
+                      cloudinary.uploader.upload_large(
+                          file.path, 
+                          { 
+                              resource_type: resourceType,
+                              // Optional: Add a unique public_id to prevent duplicates
+                              public_id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}` 
+                          }, 
+                          (error, result) => {
+                              // Delete temporary file regardless of upload success
+                              deleteFile(file.path);
+                              
+                              if (error) {
+                                  console.error("❌ Cloudinary Upload Error:", error);
+                                  reject(error);
+                              } else {
+                                  resolve(result);
+                              }
+                          }
+                      );
+                  });
+                  
+                  mediaUrls.push(result.secure_url);
+                  console.log(`✅ Uploaded: ${file.originalname} → ${result.secure_url}`);
+              } catch (uploadError) {
+                  console.error(`❌ Failed to upload ${file.originalname}:`, uploadError);
+                  // Continue with other files even if one fails
+              }
+          }
+      }
+
       let news = loadNews();
       const newArticle = {
           id: Date.now(),
           title: req.body.title,
           content: req.body.content,
-          media: mediaUrls, 
+          media: mediaUrls,
           createdAt: new Date().toLocaleDateString("de-DE")
       };
 
@@ -295,111 +303,208 @@ app.post("/news", upload.array("media", 10), async (req, res) => {
       res.status(500).json({ error: "Fehler beim Hochladen der Dateien oder beim Speichern der News" });
   }
 });
-
-
-
-
-
-
-/*
-// Route: News löschen
-app.delete("/news/:id", (req, res) => {
-    let news = loadNews();
-    news = news.filter(n => n.id != req.params.id);
-    saveNews(news);
-    res.json({ message: "✅ News gelöscht" });
-});*/
-// Helferfunktion, um den Public-ID aus der Cloudinary-URL zu extrahieren
 function extractPublicId(url) {
-  // Beispiel-URL: 
-  // https://res.cloudinary.com/da1r1e6gi/image/upload/v1741043333/jvtoz8vpmy4hw7xfu7yy.png
-  const uploadIndex = url.indexOf("/upload/");
-  if (uploadIndex === -1) return null;
-  let pathPart = url.substring(uploadIndex + 8); // alles nach "/upload/"
-  // Falls vorhanden, entferne die Versionsnummer (z. B. "v1741043333")
-  const parts = pathPart.split("/");
-  if (parts[0].startsWith("v")) {
-    parts.shift();
-  }
-  // Setze alle Teile wieder zusammen (falls dein Public-ID Ordnerstrukturen enthält)
-  let publicIdWithExt = parts.join("/");
-  // Entferne die Dateiendung
-  const dotIndex = publicIdWithExt.lastIndexOf(".");
-  if (dotIndex !== -1) {
-    return publicIdWithExt.substring(0, dotIndex);
-  }
-  return publicIdWithExt;
+    const uploadIndex = url.indexOf("/upload/");
+    if (uploadIndex === -1) return null;
+    let pathPart = url.substring(uploadIndex + 8);
+    const parts = pathPart.split("/");
+    if (parts[0].startsWith("v")) {
+        parts.shift();
+    }
+    let publicIdWithExt = parts.join("/");
+    const dotIndex = publicIdWithExt.lastIndexOf(".");
+    if (dotIndex !== -1) {
+        return publicIdWithExt.substring(0, dotIndex);
+    }
+    return publicIdWithExt;
 }
 
-// Helferfunktion, um den Ressourcentyp zu bestimmen
 function extractResourceType(url) {
-  if (url.includes("/video/upload/")) return "video";
-  if (url.includes("/image/upload/")) return "image";
-  return "image"; // Fallback
+    if (url.includes("/video/upload/")) return "video";
+    if (url.includes("/image/upload/")) return "image";
+    return "image";
 }
 
-// Angepasste DELETE-Route: Löscht die News und die zugehörigen Dateien in Cloudinary
 app.delete("/news/:id", async (req, res) => {
-  let news = loadNews();
-  // Finde den zu löschenden Artikel
-  const newsToDelete = news.find(n => n.id == req.params.id);
-  if (!newsToDelete) {
-    return res.status(404).json({ error: "Artikel nicht gefunden" });
+    let news = loadNews();
+    const newsToDelete = news.find(n => n.id == req.params.id);
+    if (!newsToDelete) {
+        return res.status(404).json({ error: "Artikel nicht gefunden" });
+    }
+
+    if (newsToDelete.media && newsToDelete.media.length > 0) {
+        await Promise.all(newsToDelete.media.map(async (url) => {
+            const publicId = extractPublicId(url);
+            const resourceType = extractResourceType(url);
+            if (publicId) {
+                try {
+                    const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+                    console.log("Cloudinary deletion result:", result);
+                } catch (error) {
+                    console.error("Fehler beim Löschen der Datei in Cloudinary:", error);
+                }
+            }
+        }));
+    }
+
+    const filteredNews = news.filter(n => n.id != req.params.id);
+    await saveNews(filteredNews);
+
+    console.log("🗑 News gelöscht mit ID:", req.params.id);
+    res.json({ message: "News gelöscht" });
+});
+
+// Modified PUT route for news with fixed upload handling
+app.put("/news/:id", upload.array("media", 10), async (req, res) => {
+  console.log(`✏️ PUT-Anfrage erhalten für News-ID: ${req.params.id}`, req.body);
+  console.log("📂 Hochgeladene Dateien:", req.files ? req.files.map(file => file.originalname) : "Keine");
+
+  if (!req.body.title || !req.body.content) {
+      return res.status(400).json({ error: "Titel und Inhalt sind erforderlich!" });
   }
 
-  // Lösche alle in diesem Artikel gespeicherten Cloudinary-Dateien
-  if (newsToDelete.media && newsToDelete.media.length > 0) {
-    await Promise.all(newsToDelete.media.map(async (url) => {
-      const publicId = extractPublicId(url);
-      const resourceType = extractResourceType(url);
-      if (publicId) {
-        try {
-          const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
-          console.log("Cloudinary deletion result:", result);
-        } catch (error) {
-          console.error("Fehler beim Löschen der Datei in Cloudinary:", error);
-        }
+  try {
+      let news = loadNews();
+      const index = news.findIndex(n => n.id == req.params.id);
+
+      if (index === -1) {
+          return res.status(404).json({ error: "Artikel nicht gefunden" });
       }
-    }));
+
+      // Process files one by one to avoid duplicate uploads
+      const newMediaUrls = [];
+      
+      if (req.files && req.files.length > 0) {
+          for (const file of req.files) {
+              try {
+                  // Use a Promise to handle each file upload
+                  const result = await new Promise((resolve, reject) => {
+                      // For large files, specify a resource_type based on mimetype
+                      const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+                      
+                      cloudinary.uploader.upload_large(
+                          file.path, 
+                          { 
+                              resource_type: resourceType,
+                              // Optional: Add a unique public_id to prevent duplicates
+                              public_id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}` 
+                          }, 
+                          (error, result) => {
+                              // Delete temporary file regardless of upload success
+                              deleteFile(file.path);
+                              
+                              if (error) {
+                                  console.error("❌ Cloudinary Upload Error:", error);
+                                  reject(error);
+                              } else {
+                                  resolve(result);
+                              }
+                          }
+                      );
+                  });
+                  
+                  newMediaUrls.push(result.secure_url);
+                  console.log(`✅ Uploaded: ${file.originalname} → ${result.secure_url}`);
+              } catch (uploadError) {
+                  console.error(`❌ Failed to upload ${file.originalname}:`, uploadError);
+                  // Continue with other files even if one fails
+              }
+          }
+      }
+
+      let existingMedia = news[index].media || [];
+      const allMedia = [...existingMedia, ...newMediaUrls];
+
+      news[index] = {
+          ...news[index],
+          title: req.body.title,
+          content: req.body.content,
+          media: allMedia,
+          updatedAt: new Date().toLocaleDateString("de-DE")
+      };
+
+      await saveNews(news);
+      console.log("✅ News erfolgreich aktualisiert:", news[index]);
+      res.json(news[index]);
+
+  } catch (error) {
+      console.error("❌ Fehler beim Aktualisieren der News:", error);
+      res.status(500).json({ error: "Fehler beim Aktualisieren der News" });
   }
-
-  // Entferne den Artikel aus der News-Liste und speichere die Datei
-  const filteredNews = news.filter(n => n.id != req.params.id);
-  await saveNews(filteredNews);
-
-  console.log("🗑 News gelöscht mit ID:", req.params.id);
-  res.json({ message: "News gelöscht" });
 });
 
+app.get("/news/:id", (req, res) => {
+    const newsId = req.params.id;
+    console.log(`🔎 GET-Anfrage erhalten für News-ID: ${newsId}`);
 
-// Server starten
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server läuft auf http://localhost:${PORT}`);
+    let news = loadNews();
+    const newsItem = news.find(n => n.id == newsId);
+
+    if (!newsItem) {
+        console.warn(`⚠ News mit ID ${newsId} nicht gefunden.`);
+        return res.status(404).json({ error: "Artikel nicht gefunden" });
+    }
+
+    console.log("✅ News gefunden:", newsItem);
+    res.json(newsItem);
 });
 
-// News bearbeiten
-app.put("/news/:id", (req, res) => {
-  let news = loadNews();
-  const index = news.findIndex(n => n.id == req.params.id);
-  
-  if (index === -1) {
-      return res.status(404).json({ error: "Artikel nicht gefunden" });
+app.delete("/news/:newsId/media/:mediaIndex", async (req, res) => {
+  const { newsId, mediaIndex } = req.params;
+  console.log(`🗑️  Lösche Medium mit Index ${mediaIndex} aus News-ID: ${newsId}`);
+
+  try {
+      let news = loadNews();
+      const index = news.findIndex(n => n.id == newsId);
+
+      if (index === -1) {
+          return res.status(404).json({ error: "Artikel nicht gefunden" });
+      }
+
+      if (!news[index].media || mediaIndex >= news[index].media.length) {
+          return res.status(404).json({ error: "Medium nicht gefunden" });
+      }
+
+      const mediaToRemove = news[index].media[mediaIndex];
+      
+      // Make sure we have a media URL to delete
+      if (!mediaToRemove) {
+          return res.status(404).json({ error: "Medium nicht gefunden" });
+      }
+
+      // Delete from Cloudinary (wrapped in try-catch to handle any errors)
+      try {
+          const publicId = extractPublicId(mediaToRemove);
+          const resourceType = extractResourceType(mediaToRemove);
+          
+          if (publicId) {
+              // Wait for the Cloudinary deletion to complete
+              await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+              console.log("Cloudinary deletion successful for:", publicId);
+          }
+      } catch (cloudinaryError) {
+          console.error("Fehler beim Löschen der Datei in Cloudinary:", cloudinaryError);
+          // Continue with the function even if Cloudinary deletion fails
+      }
+
+      // Remove the media URL from the news object
+      news[index].media.splice(mediaIndex, 1);
+
+      // Save the updated news data
+      await saveNews(news);
+      
+      console.log(`✅ Medium erfolgreich gelöscht (Index: ${mediaIndex})`);
+      
+      // Return a proper JSON response
+      res.json({ success: true, message: "Medium gelöscht" });
+
+  } catch (error) {
+      console.error("❌ Fehler beim Löschen des Mediums:", error);
+      res.status(500).json({ error: "Fehler beim Löschen des Mediums" });
   }
-
-  // Datum des letzten Updates setzen
-  news[index] = {
-      ...news[index],
-      title: req.body.title,
-      content: req.body.content,
-      updatedAt: new Date().toLocaleDateString("de-DE") // Änderungsdatum speichern
-  };
-
-  saveNews(news);
-
-  console.log("✏️ News aktualisiert:", news[index]);
-  res.json(news[index]);
 });
+// ... (vorheriger Code) ...
+
 
 /*
 // News löschen
@@ -417,6 +522,11 @@ app.delete("/news/:id", (req, res) => {
     res.json({ message: "News gelöscht" });
 });*/
 
+// Server starten 
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server läuft auf http://localhost:${PORT}`);
+})/
 
 
 

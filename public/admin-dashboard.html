@@ -42,6 +42,13 @@
 
     <script src="js/admin.js" defer></script>
     <script>
+        function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
         // Logout-Button
         document.getElementById("logout-btn").addEventListener("click", async () => {
             await fetch("/admin-logout", { method: "POST" });
@@ -167,9 +174,9 @@
                         removeButton.textContent = 'Entfernen';
                         removeButton.classList.add('remove-existing-media-btn');
                         removeButton.dataset.mediaIndex = index;
-                        removeButton.addEventListener('click', function() {
+                        removeButton.addEventListener('click', debounce(function() {
                             removeExistingMedia(newsItem.id, index);
-                        });
+                        }, 300)); // 300ms delay
 
                         const mediaContainer = document.createElement('div');
                         mediaContainer.appendChild(mediaElement);
@@ -187,21 +194,30 @@
         }
 
         async function removeExistingMedia(newsId, mediaIndex) {
+  // Disable all buttons during operation
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(btn => btn.disabled = true);
+  
   try {
     const response = await fetch(`/news/${newsId}/media/${mediaIndex}`, { method: "DELETE" });
     if (!response.ok) throw new Error("Fehler beim Entfernen des Mediums");
     
-    // Parse JSON response
     const result = await response.json();
     console.log("Delete response:", result);
     
-    // Now reload the news and edit form
+    // Add a small delay before reloading
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
     await fetchNews();
     await editNews(newsId);
   } catch (error) {
     console.error("Fehler beim Entfernen des Mediums:", error);
+    alert("Fehler beim Löschen: " + error.message);
+  } finally {
+    // Re-enable all buttons when done
+    buttons.forEach(btn => btn.disabled = false);
   }
-} 
+}
 
 
         async function cancelEdit() {

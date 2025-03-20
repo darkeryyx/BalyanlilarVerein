@@ -37,8 +37,11 @@ const uploadDir = path.join(__dirname, 'tmp_uploads');
 const fs = require("fs");
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
+} 
+const eventsFile = path.join(__dirname, "data", "events.json");
+if (!fs.existsSync(path.dirname(eventsFile))) {
+  fs.mkdirSync(path.dirname(eventsFile), { recursive: true });
 }
-
 // Multer-Konfiguration für diskStorage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -132,6 +135,239 @@ app.post('/admin-login', loginLimiter, (req, res) => {
     });
 });
 
+function loadEvents() {
+    try {
+      if (!fs.existsSync(eventsFile)) {
+        console.warn("Datei existiert nicht. Erstelle neue events.json...");
+        fs.writeFileSync(eventsFile, "[]", { encoding: "utf8" });
+        return [];
+      }
+      const rawData = fs.readFileSync(eventsFile, "utf8");
+      if (!rawData) {
+        console.warn("events.json ist leer. Erstelle neue events.json...");
+        fs.writeFileSync(eventsFile, "[]", { encoding: "utf8" });
+        return [];
+      }
+      return JSON.parse(rawData);
+    } catch (err) {
+      console.error("Fehler beim Laden der Veranstaltungen:", err);
+      return [];
+    }
+  }
+  
+  function saveEvents(events) {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!Array.isArray(events)) {
+          reject(new Error("Ungültige Daten: Events ist kein Array!"));
+          return;
+        }
+        fs.writeFile(eventsFile, JSON.stringify(events, null, 2), { encoding: "utf8" }, (err) => {
+          if (err) {
+            console.error("Fehler beim Speichern der Veranstaltungen:", err);
+            reject(err);
+          } else {
+            console.log("✅ Veranstaltungen erfolgreich gespeichert!");
+            resolve();
+          }
+        });
+      } catch (err) {
+        console.error("Fehler beim Speichern der Veranstaltungen:", err);
+        reject(err);
+      }
+    });
+  }
+  app.get("/events", (req, res) => {
+    res.json(loadEvents());
+  });
+  app.post("/events", upload.array("media", 10), async (req, res) => {
+    console.log("POST-Veranstaltung:", req.body);
+    if (!req.body.title || !req.body.content || !req.body.date || !req.body.location) {
+      return res.status(400).json({ error: "Titel, Inhalt, Datum und Ort sind erforderlich!" });
+    }
+    try {
+      const mediaUrls = [];
+      if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+          try {
+            const result = await new Promise((resolve, reject) => {
+              const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+              cloudinary.uploader.upload_large(
+                file.path,
+                { 
+                  resource_type: resourceType,
+                  public_id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}` 
+                },
+                (error, result) => {
+                  deleteFile(file.path);
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(result);
+                  }
+                }
+              );
+            });
+            mediaUrls.push(result.secure_url);
+          } catch (uploadError) {
+            console.error("Upload-Fehler:", uploadError);
+          }
+        }
+      }
+  
+      let events = loadEvents();
+      const newEvent = {
+        id: Date.now(),
+        title: req.body.title,
+        content: req.body.content,
+        date: req.body.date,
+        time: req.body.time || "",
+        location: req.body.location,
+        media: mediaUrls,
+        createdAt: new Date().toLocaleDateString("de-DE")
+      };
+      events.push(newEvent);
+      await saveEvents(events);
+      console.log("✅ Veranstaltung erfolgreich gespeichert:", newEvent);
+      res.status(201).json(newEvent);
+    } catch (error) {
+      console.error("Fehler beim Speichern der Veranstaltung:", error);
+      res.status(500).json({ error: "Fehler beim Speichern der Veranstaltung" });
+    }
+  });
+  
+  app.get("/events/:id", (req, res) => {
+    let events = loadEvents();
+    const eventItem = events.find(e => e.id == req.params.id);
+    if (!eventItem) {
+      return res.status(404).json({ error: "Veranstaltung nicht gefunden" });
+    }
+    res.json(eventItem);
+  });
+  app.put("/events/:id", upload.array("media", 10), async (req, res) => {
+    if (!req.body.title || !req.body.content || !req.body.date || !req.body.location) {
+      return res.status(400).json({ error: "Titel, Inhalt, Datum und Ort sind erforderlich!" });
+    }
+    try {
+      let events = loadEvents();
+      const index = events.findIndex(e => e.id == req.params.id);
+      if (index === -1) {
+        return res.status(404).json({ error: "Veranstaltung nicht gefunden" });
+      }
+  
+      const newMediaUrls = [];
+      if (req.files && req.files.length > 0) {
+        for (const file of req.files) {
+          try {
+            const result = await new Promise((resolve, reject) => {
+              const resourceType = file.mimetype.startsWith('video/') ? 'video' : 'image';
+              cloudinary.uploader.upload_large(
+                file.path,
+                { 
+                  resource_type: resourceType,
+                  public_id: `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+                },
+                (error, result) => {
+                  deleteFile(file.path);
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(result);
+                  }
+                }
+              );
+            });
+            newMediaUrls.push(result.secure_url);
+          } catch (uploadError) {
+            console.error("Upload-Fehler:", uploadError);
+          }
+        }
+      }
+  
+      let existingMedia = events[index].media || [];
+      const allMedia = [...existingMedia, ...newMediaUrls];
+  
+      events[index] = {
+        ...events[index],
+        title: req.body.title,
+        content: req.body.content,
+        date: req.body.date,
+        time: req.body.time || "",
+        location: req.body.location,
+        media: allMedia,
+        updatedAt: new Date().toLocaleDateString("de-DE")
+      };
+  
+      await saveEvents(events);
+      console.log("✅ Veranstaltung aktualisiert:", events[index]);
+      res.json(events[index]);
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Veranstaltung:", error);
+      res.status(500).json({ error: "Fehler beim Aktualisieren der Veranstaltung" });
+    }
+  });
+  app.delete("/events/:id", async (req, res) => {
+    let events = loadEvents();
+    const eventToDelete = events.find(e => e.id == req.params.id);
+    if (!eventToDelete) {
+      return res.status(404).json({ error: "Veranstaltung nicht gefunden" });
+    }
+  
+    if (eventToDelete.media && eventToDelete.media.length > 0) {
+      await Promise.all(eventToDelete.media.map(async (url) => {
+        const publicId = extractPublicId(url);
+        const resourceType = extractResourceType(url);
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+            console.log("Cloudinary deletion successful for:", publicId);
+          } catch (error) {
+            console.error("Fehler beim Löschen in Cloudinary:", error);
+          }
+        }
+      }));
+    }
+  
+    events = events.filter(e => e.id != req.params.id);
+    await saveEvents(events);
+    console.log("🗑 Veranstaltung gelöscht mit ID:", req.params.id);
+    res.json({ message: "Veranstaltung gelöscht" });
+  });
+  app.delete("/events/:eventId/media/:mediaIndex", async (req, res) => {
+    const { eventId, mediaIndex } = req.params;
+    let events = loadEvents();
+    const index = events.findIndex(e => e.id == eventId);
+    if (index === -1) {
+      return res.status(404).json({ error: "Veranstaltung nicht gefunden" });
+    }
+  
+    if (!events[index].media || mediaIndex >= events[index].media.length) {
+      return res.status(404).json({ error: "Medium nicht gefunden" });
+    }
+  
+    const mediaToRemove = events[index].media[mediaIndex];
+    if (!mediaToRemove) {
+      return res.status(404).json({ error: "Medium nicht gefunden" });
+    }
+  
+    try {
+      const publicId = extractPublicId(mediaToRemove);
+      const resourceType = extractResourceType(mediaToRemove);
+      if (publicId) {
+        await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+        console.log("Cloudinary deletion successful for:", publicId);
+      }
+    } catch (error) {
+      console.error("Fehler beim Löschen des Mediums:", error);
+    }
+  
+    events[index].media.splice(mediaIndex, 1);
+    await saveEvents(events);
+    console.log(`✅ Medium aus Veranstaltung (Index: ${mediaIndex}) gelöscht`);
+    res.json({ success: true, message: "Medium gelöscht" });
+  });
+  
+  
 function isAdmin(req, res, next) {
     if (req.session.user && req.session.user.username === admin.username) {
         return next();

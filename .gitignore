@@ -1,3 +1,4 @@
 process.env
 hash.js
 news.json
+events.json

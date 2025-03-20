@@ -17,31 +17,67 @@
     <h1>Admin Dashboard</h1>
     <button id="logout-btn">Logout</button>
 
-    <h2>News erstellen/bearbeiten</h2>
-    <form id="newsForm" enctype="multipart/form-data">
-        <input type="hidden" id="news-id">
-        <label for="title">Titel:</label>
-        <input type="text" id="title" required>
-
-        <label for="content">Inhalt:</label>
-        <textarea id="content" required></textarea>
-
-        <div id="existing-media">
-            <!-- Hier werden die vorhandenen Medien angezeigt -->
-        </div>
-
-        <label for="media">Bilder/Videos hochladen:</label>
-        <input type="file" id="media" name="media" multiple accept=".png,.jpg,.jpeg,.gif,.mp4,.webm,.ogg,.mkv">
-
-        <button type="submit">Speichern</button>
-        <button type="button" id="cancel-edit-btn" style="display:none;">Abbrechen</button>
+    <h2>News / Veranstaltung erstellen/bearbeiten</h2>
+    <form id="entryForm" enctype="multipart/form-data">
+      <input type="hidden" id="entry-id">
+      
+      <!-- Auswahlfeld für den Eintragstyp -->
+      <label for="entry-type">Eintragstyp:</label>
+      <select id="entry-type">
+        <option value="news" selected>News</option>
+        <option value="event">Veranstaltung</option>
+      </select>
+    
+      <label for="title">Titel:</label>
+      <input type="text" id="title" required>
+    
+      <label for="content">Inhalt:</label>
+      <textarea id="content" required></textarea>
+    
+      <!-- Zusätzliche Felder für Veranstaltungen -->
+      <div id="event-fields" style="display: none;">
+        <label for="event-date">Datum:</label>
+        <input type="date" id="event-date">
+        
+        <label for="event-time">Uhrzeit:</label>
+        <input type="time" id="event-time">
+        
+        <label for="event-location">Ort:</label>
+        <input type="text" id="event-location">
+      </div>
+    
+      <div id="existing-media">
+        <!-- Hier werden vorhandene Medien angezeigt -->
+      </div>
+    
+      <label for="media">Bilder/Videos hochladen:</label>
+      <input type="file" id="media" name="media" multiple accept=".png,.jpg,.jpeg,.gif,.mp4,.webm,.ogg,.mkv">
+    
+      <button type="submit">Speichern</button>
+      <button type="button" id="cancel-edit-btn" style="display:none;">Abbrechen</button>
     </form>
+    
 
     <h2>Bestehende News</h2>
     <ul id="news-list"></ul>
+    <h2>Bestehende Veranstaltungen</h2>
+    <ul id="events-list"></ul>
+
 
     <script src="js/admin.js" defer></script>
     <script>
+        const entryTypeSelect = document.getElementById("entry-type");
+        const eventFields = document.getElementById("event-fields");
+      
+        entryTypeSelect.addEventListener("change", () => {
+          if (entryTypeSelect.value === "event") {
+            eventFields.style.display = "block";
+          } else {
+            eventFields.style.display = "none";
+          }
+        });
+
+ 
         function debounce(func, wait) {
   let timeout;
   return function(...args) {
@@ -125,6 +161,46 @@
                 console.error("Fehler beim Abrufen der News:", error);
             }
         }
+        
+        async function fetchEvents() {
+    try {
+        const response = await fetch("/events");
+        if (!response.ok) throw new Error("Fehler beim Abrufen der Veranstaltungen");
+        const events = await response.json();
+        const eventsList = document.getElementById("events-list");
+        eventsList.innerHTML = "";
+        events.forEach(event => {
+            const li = document.createElement("li");
+            // Beispielhafte Darstellung – passe dies nach Bedarf an:
+            li.innerHTML = `
+                <h3>${event.title}</h3>
+                <p>${event.content}</p>
+                <p><strong>Datum:</strong> ${event.date} ${event.time ? event.time : ""}</p>
+                <p><strong>Ort:</strong> ${event.location}</p>
+            `;
+            // Falls Medien vorhanden sind – verwende ein Platzhalterbild, falls nicht:
+            if (event.media && event.media.length > 0) {
+                event.media.forEach(mediaUrl => {
+                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
+                                    mediaUrl.toLowerCase().endsWith('.webm') ||
+                                    mediaUrl.toLowerCase().endsWith('.ogg') ||
+                                    mediaUrl.toLowerCase().endsWith('.mkv');
+                    if (isVideo) {
+                        li.innerHTML += `<video src="${mediaUrl}" width="320" height="240" controls></video>`;
+                    } else {
+                        li.innerHTML += `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
+                    }
+                });
+            } else {
+                // Zeige einen Platzhalter an, wenn kein Bild vorhanden ist:
+                li.innerHTML += `<img src="/api/placeholder/400/240" alt="Kein Bild vorhanden" style="max-width: 300px;">`;
+            }
+            eventsList.appendChild(li);
+        });
+    } catch (error) {
+        console.error("Fehler beim Abrufen der Veranstaltungen:", error);
+    }
+}
 
         async function deleteNews(id) {
             try {
@@ -142,7 +218,7 @@
                 if (!response.ok) throw new Error("Fehler beim Abrufen der News");
                 const newsItem = await response.json();
 
-                document.getElementById("news-id").value = newsItem.id;
+                document.getElementById("entry-id").value = newsItem.id;
                 document.getElementById("title").value = newsItem.title;
                 document.getElementById("content").value = newsItem.content;
 
@@ -221,13 +297,13 @@
 
 
         async function cancelEdit() {
-            document.getElementById("newsForm").reset();
-            document.getElementById("news-id").value = "";
+            document.getElementById("entryForm").reset();
+            document.getElementById("entry-id").value = "";
             document.getElementById("existing-media").innerHTML = "";
             document.getElementById("cancel-edit-btn").style.display = "none";
         }
 
-        document.getElementById("newsForm").addEventListener("submit", async function(event) {
+        document.getElementById("entryForm").addEventListener("submit", async function(event) {
     event.preventDefault();
 
     // Show upload overlay
@@ -300,10 +376,11 @@
         if (msg && statusText) msg.textContent = statusText;
     };
 
-    const id = document.getElementById("news-id").value;
+    const id = document.getElementById("entry-id").value;
     const title = document.getElementById("title").value.trim();
     const content = document.getElementById("content").value.trim();
     const mediaFiles = document.getElementById("media").files;
+    const entryType = document.getElementById("entry-type").value;
 
     if (!title || !content) {
         alert("Bitte Titel und Inhalt eingeben!");
@@ -314,7 +391,13 @@
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content", content);
-
+    
+    // Falls es eine Veranstaltung ist, hänge zusätzliche Felder an
+    if (entryType === "event") {
+        formData.append("date", document.getElementById("event-date").value);
+        formData.append("time", document.getElementById("event-time").value);
+        formData.append("location", document.getElementById("event-location").value);
+    }
     // If there are large files, update the message
     let totalSize = 0;
     for (const file of mediaFiles) {
@@ -322,31 +405,28 @@
         totalSize += file.size;
         console.log(`📂 Datei hinzugefügt: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
     }
-
     if (totalSize > 50 * 1024 * 1024) { // If total size > 50MB
         window.updateUploadProgress(0, `Große Dateien erkannt (${(totalSize / (1024 * 1024)).toFixed(2)} MB). Das Hochladen kann einige Minuten dauern...`);
     }
-
+    // Bestimme Endpunkt und Methode basierend auf Typ und ID
+    let uploadMethod = id ? "PUT" : "POST";
+    let uploadUrl;
+    if (entryType === "news") {
+        uploadUrl = id ? `/news/${id}` : "/news";
+    } else {
+        uploadUrl = id ? `/events/${id}` : "/events";
+    }
     try {
-        // Track upload start time for large files
+        // Starte den Timer für den Upload
         const startTime = Date.now();
-        let uploadMethod = "POST";
-        let uploadUrl = "/news";
-        
-        if (id) {
-            uploadMethod = "PUT";
-            uploadUrl = `/news/${id}`;
-        }
-        
-        // Regular update for large uploads to show progress is happening
         let uploadTimer = null;
-        if (totalSize > 20 * 1024 * 1024) { // For files > 20MB
+        if (totalSize > 20 * 1024 * 1024) {
             let seconds = 0;
             uploadTimer = setInterval(() => {
                 seconds += 1;
                 const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(0);
                 window.updateUploadProgress(
-                    Math.min(95, Math.floor(seconds * 3)), // Cap at 95% until complete
+                    Math.min(95, Math.floor(seconds * 3)),
                     `Upload läuft seit ${elapsedTime} Sekunden. Bitte warten...`
                 );
             }, 1000);
@@ -370,14 +450,17 @@
         window.updateUploadProgress(100, "✅ Upload erfolgreich abgeschlossen!");
         
         console.log("✅ News erfolgreich gespeichert!");
-        document.getElementById("newsForm").reset();
-        document.getElementById("news-id").value = "";
+        document.getElementById("entryForm").reset();
+        document.getElementById("entry-type").value = "news";
+        document.getElementById("event-fields").style.display = "none";
+        document.getElementById("entry-id").value = "";
         document.getElementById("existing-media").innerHTML = "";
         document.getElementById("cancel-edit-btn").style.display = "none";
         
         // Small delay to show 100% completion before refreshing
         setTimeout(async () => {
             await fetchNews();
+            await fetchEvents();
             document.body.removeChild(overlay);
         }, 500);
     } catch (error) {
@@ -392,7 +475,10 @@
     }
 });
 
-        fetchNews();
+
+    fetchNews();
+    fetchEvents();
+
     </script>
 </body>
 </html>

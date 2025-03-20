@@ -214,6 +214,10 @@ function loadEvents() {
           }
         }
       }
+          // Falls keine Datei hochgeladen wurde, verwende das Logo als Standardbild
+    if (mediaUrls.length === 0) {
+        mediaUrls.push("https://res.cloudinary.com/da1r1e6gi/image/upload/v1742407933/Logo_m2eyz9.png");
+      }
   
       let events = loadEvents();
       const newEvent = {

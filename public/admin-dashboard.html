@@ -171,14 +171,14 @@
         eventsList.innerHTML = "";
         events.forEach(event => {
             const li = document.createElement("li");
-            // Beispielhafte Darstellung – passe dies nach Bedarf an:
             li.innerHTML = `
                 <h3>${event.title}</h3>
                 <p>${event.content}</p>
                 <p><strong>Datum:</strong> ${event.date} ${event.time ? event.time : ""}</p>
                 <p><strong>Ort:</strong> ${event.location}</p>
             `;
-            // Falls Medien vorhanden sind – verwende ein Platzhalterbild, falls nicht:
+            
+            // Falls Medien vorhanden sind:
             if (event.media && event.media.length > 0) {
                 event.media.forEach(mediaUrl => {
                     const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
@@ -192,15 +192,138 @@
                     }
                 });
             } else {
-                // Zeige einen Platzhalter an, wenn kein Bild vorhanden ist:
-                li.innerHTML += `<img src="/api/placeholder/400/240" alt="Kein Bild vorhanden" style="max-width: 300px;">`;
+                // Verwende ein anderes Platzhalterbild:
+                li.innerHTML += `<img src="https://via.placeholder.com/400x240?text=Kein+Bild" alt="Kein Bild vorhanden" style="max-width: 300px;">`;
             }
+            
+            // Editieren-Button
+            const editButton = document.createElement("button");
+            editButton.textContent = "Bearbeiten";
+            editButton.addEventListener("click", function() {
+                editEvent(event.id);
+            });
+            li.appendChild(editButton);
+            
+            // Löschen-Button
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Löschen";
+            deleteButton.addEventListener("click", function() {
+                deleteEvent(event.id);
+            });
+            li.appendChild(deleteButton);
+            
             eventsList.appendChild(li);
         });
     } catch (error) {
         console.error("Fehler beim Abrufen der Veranstaltungen:", error);
     }
 }
+
+async function editEvent(id) {
+    try {
+        const response = await fetch(`/events/${id}`);
+        if (!response.ok) throw new Error("Fehler beim Abrufen der Veranstaltung");
+        const eventItem = await response.json();
+
+        // Formular mit den Event-Daten füllen
+        document.getElementById("entry-id").value = eventItem.id;
+        document.getElementById("title").value = eventItem.title;
+        document.getElementById("content").value = eventItem.content;
+        
+        // Setze den Typ auf "event" und zeige event-spezifische Felder an
+        document.getElementById("entry-type").value = "event";
+        document.getElementById("event-fields").style.display = "block";
+        document.getElementById("event-date").value = eventItem.date || "";
+        document.getElementById("event-time").value = eventItem.time || "";
+        document.getElementById("event-location").value = eventItem.location || "";
+        
+        // Vorhandene Medien anzeigen
+        const existingMediaDiv = document.getElementById("existing-media");
+        existingMediaDiv.innerHTML = "";
+        if (eventItem.media && eventItem.media.length > 0) {
+            eventItem.media.forEach((mediaUrl, index) => {
+                const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
+                                mediaUrl.toLowerCase().endsWith('.webm') ||
+                                mediaUrl.toLowerCase().endsWith('.ogg') ||
+                                mediaUrl.toLowerCase().endsWith('.mkv');
+                let mediaElement;
+                if (isVideo) {
+                    mediaElement = document.createElement('video');
+                    mediaElement.src = mediaUrl;
+                    mediaElement.width = 320;
+                    mediaElement.height = 240;
+                    mediaElement.controls = true;
+                } else {
+                    mediaElement = document.createElement('img');
+                    mediaElement.src = mediaUrl;
+                    mediaElement.alt = "Bild";
+                    mediaElement.style.maxWidth = "300px";
+                }
+                
+                // Erstelle einen Button zum Entfernen des Mediums
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Entfernen';
+                removeButton.classList.add('remove-existing-media-btn');
+                removeButton.dataset.mediaIndex = index;
+                removeButton.addEventListener('click', debounce(function() {
+                    // Du kannst hier eine Funktion removeExistingMediaEvent implementieren,
+                    // die analog zu removeExistingMedia funktioniert, aber den Endpunkt /events verwendet.
+                    removeExistingMediaEvent(eventItem.id, index);
+                }, 300));
+                
+                const mediaContainer = document.createElement('div');
+                mediaContainer.appendChild(mediaElement);
+                mediaContainer.appendChild(removeButton);
+                existingMediaDiv.appendChild(mediaContainer);
+            });
+        }
+        
+        document.getElementById("cancel-edit-btn").style.display = "inline-block";
+        document.getElementById("cancel-edit-btn").addEventListener('click', function() {
+            cancelEdit();
+        });
+    } catch (error) {
+        console.error("Fehler beim Abrufen der Veranstaltung:", error);
+    }
+}
+async function deleteEvent(id) {
+    try {
+        const response = await fetch(`/events/${id}`, { method: "DELETE" });
+        if (!response.ok) throw new Error("Fehler beim Löschen der Veranstaltung");
+        await fetchEvents(); // Aktualisiert die Liste der Veranstaltungen
+    } catch (error) {
+        console.error("Fehler beim Löschen der Veranstaltung:", error);
+    }
+}
+
+async function removeExistingMediaEvent(eventId, mediaIndex) {
+    // Deaktiviere vorübergehend alle Buttons, um doppelte Klicks zu vermeiden
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    try {
+        const response = await fetch(`/events/${eventId}/media/${mediaIndex}`, { method: "DELETE" });
+        if (!response.ok) throw new Error("Fehler beim Entfernen des Mediums");
+        
+        const result = await response.json();
+        console.log("Delete response:", result);
+        
+        // Kleine Verzögerung, damit die Änderung sichtbar wird
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Aktualisiere die Anzeige: sowohl die Event-Liste als auch das Bearbeitungsformular
+        await fetchEvents();
+        await editEvent(eventId);
+    } catch (error) {
+        console.error("Fehler beim Entfernen des Mediums:", error);
+        alert("Fehler beim Löschen: " + error.message);
+    } finally {
+        // Reaktiviere alle Buttons
+        buttons.forEach(btn => btn.disabled = false);
+    }
+}
+
+
 
         async function deleteNews(id) {
             try {

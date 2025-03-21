@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alle News</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h1>Alle News</h1>
+  <ul id="all-news-list"></ul>
+  <a href="index.html">Zurück zur Startseite</a>
+  <script>
+    async function fetchAllNews() {
+      try {
+        const response = await fetch("/news");
+        if (!response.ok) throw new Error("Fehler beim Abrufen der News");
+        const news = await response.json();
+        const sortedNews = news.sort((a, b) => b.id - a.id);
+        const list = document.getElementById("all-news-list");
+        list.innerHTML = "";
+        sortedNews.forEach(item => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <h3>${item.title}</h3>
+            <p>${item.content}</p>
+            ${item.media && item.media.length > 0 
+                ? item.media.map(mediaUrl => {
+                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
+                                    mediaUrl.toLowerCase().endsWith('.webm') ||
+                                    mediaUrl.toLowerCase().endsWith('.ogg') ||
+                                    mediaUrl.toLowerCase().endsWith('.mkv');
+                    return isVideo 
+                        ? `<video src="${mediaUrl}" width="320" height="240" controls></video>`
+                        : `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
+                }).join('') 
+                : '' /* Für News gibt es hier keinen Standard-Platzhalter */
+            }
+            <small>Erstellt am: ${item.createdAt}</small>
+          `;
+          list.appendChild(li);
+        });
+      } catch (error) {
+        console.error("Fehler beim Abrufen der News:", error);
+      }
+    }
+    fetchAllNews();
+  </script>
+</body>
+</html>

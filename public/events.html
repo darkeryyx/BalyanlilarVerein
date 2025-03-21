@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alle Veranstaltungen</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <h1>Alle Veranstaltungen</h1>
+  <ul id="all-events-list"></ul>
+  <a href="index.html">Zurück zur Startseite</a>
+  <script>
+    async function fetchAllEvents() {
+      try {
+        const response = await fetch("/events");
+        if (!response.ok) throw new Error("Fehler beim Abrufen der Veranstaltungen");
+        const events = await response.json();
+        // Sortiere Events, falls nötig:
+        const sortedEvents = events.sort((a, b) => b.id - a.id);
+        const list = document.getElementById("all-events-list");
+        list.innerHTML = "";
+        sortedEvents.forEach(event => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <h3>${event.title}</h3>
+            <p>${event.content}</p>
+            <p><strong>Datum:</strong> ${event.date} ${event.time ? event.time : ""}</p>
+            <p><strong>Ort:</strong> ${event.location}</p>
+            ${event.media && event.media.length > 0 
+                ? event.media.map(mediaUrl => {
+                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
+                                    mediaUrl.toLowerCase().endsWith('.webm') ||
+                                    mediaUrl.toLowerCase().endsWith('.ogg') ||
+                                    mediaUrl.toLowerCase().endsWith('.mkv');
+                    return isVideo 
+                        ? `<video src="${mediaUrl}" width="320" height="240" controls></video>`
+                        : `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
+                }).join('') 
+                : `<img src="https://res.cloudinary.com/da1r1e6gi/image/upload/v1742407933/Logo_m2eyz9.png" alt="Kein Bild vorhanden" style="max-width: 300px;">`
+            }
+            <small>Erstellt am: ${event.createdAt}</small>
+          `;
+          list.appendChild(li);
+        });
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Veranstaltungen:", error);
+      }
+    }
+    fetchAllEvents();
+  </script>
+</body>
+</html>

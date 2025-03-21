@@ -220,6 +220,7 @@ function loadEvents() {
       }
   
       let events = loadEvents();
+      const timestamp = new Date().toLocaleDateString("de-DE");
       const newEvent = {
         id: Date.now(),
         title: req.body.title,
@@ -228,7 +229,8 @@ function loadEvents() {
         time: req.body.time || "",
         location: req.body.location,
         media: mediaUrls,
-        createdAt: new Date().toLocaleDateString("de-DE")
+        createdAt: timestamp,
+        updatedAt: timestamp 
       };
       events.push(newEvent);
       await saveEvents(events);
@@ -525,13 +527,16 @@ app.post("/news", upload.array("media", 10), async (req, res) => {
       }
 
       let news = loadNews();
+      const timestamp = new Date().toLocaleDateString("de-DE");
       const newArticle = {
           id: Date.now(),
           title: req.body.title,
           content: req.body.content,
           media: mediaUrls,
-          createdAt: new Date().toLocaleDateString("de-DE")
+          createdAt: timestamp,
+          updatedAt: timestamp // Standardmäßig gleich wie createdAt
       };
+      
 
       news.push(newArticle);
 

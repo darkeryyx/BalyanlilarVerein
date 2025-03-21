@@ -140,6 +140,12 @@
                         });
                     }
 
+                    // Zeitstempel anzeigen
+                const small = document.createElement("small");
+                small.innerHTML = `Erstellt am: ${item.createdAt}` +
+                (item.updatedAt && item.updatedAt !== item.createdAt ? ` | Bearbeitet am: ${item.updatedAt}` : "");
+                li.appendChild(small);
+
                     const editButton = document.createElement("button");
                     editButton.textContent = "Bearbeiten";
                     editButton.classList.add("edit-btn");
@@ -198,9 +204,15 @@
                 });
             } else {
                 // Verwende ein anderes Platzhalterbild:
-                li.innerHTML += `<img src="https://via.placeholder.com/400x240?text=Kein+Bild" alt="Kein Bild vorhanden" style="max-width: 300px;">`;
+                li.innerHTML += `<img src="https://res.cloudinary.com/da1r1e6gi/image/upload/v1742407933/Logo_m2eyz9.png" alt="Logo" style="max-width: 300px;">`;
             }
             
+            // Zeitstempel anzeigen
+            const small = document.createElement("small");
+            small.innerHTML = `Erstellt am: ${event.createdAt}` +
+                (event.updatedAt && event.updatedAt !== event.createdAt ? ` | Bearbeitet am: ${event.updatedAt}` : "");
+            li.appendChild(small);
+
             // Editieren-Button
             const editButton = document.createElement("button");
             editButton.textContent = "Bearbeiten";

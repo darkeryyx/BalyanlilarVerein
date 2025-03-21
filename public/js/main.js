@@ -32,7 +32,10 @@ async function fetchNews() {
                 <h3>${item.title}</h3>
                 <p>${item.content}</p>
                 ${mediaElements}
-                <small>Erstellt am: ${item.createdAt}</small>
+                <small>
+                  Erstellt am: ${item.createdAt}
+                  ${item.updatedAt && item.updatedAt !== item.createdAt ? " | Bearbeitet am: " + item.updatedAt : ""}
+                </small>
             `;
             newsList.appendChild(li);
         });
@@ -69,7 +72,10 @@ async function fetchEvents() {
                   <h3 class="event-title">${event.title}</h3>
                   <p class="event-location"><span>📍</span> ${event.location}</p>
                   <p>${event.content}</p>
-                  <small>Erstellt am: ${event.createdAt}</small>
+                  <small>
+                    Erstellt am: ${event.createdAt}
+                    ${event.updatedAt && event.updatedAt !== event.createdAt ? " | Bearbeitet am: " + event.updatedAt : ""}
+                  </small>
                 </div>
             `;
             eventsGrid.appendChild(card);

@@ -15,30 +15,26 @@ async function fetchNews() {
             let mediaElements = '';
             if (item.media && item.media.length > 0) {
                 item.media.forEach(mediaUrl => {
-                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
-                                    mediaUrl.toLowerCase().endsWith('.webm') ||
-                                    mediaUrl.toLowerCase().endsWith('.ogg') ||
-                                    mediaUrl.toLowerCase().endsWith('.mkv');
+                    const isVideo = mediaUrl.toLowerCase().match(/\.(mp4|webm|ogg|mkv)$/);
                     if (isVideo) {
-                        mediaElements += `<video src="${mediaUrl}" width="320" height="240" controls></video>`;
+                        mediaElements += `<video src="${mediaUrl}" controls></video>`;
                     } else {
-                        mediaElements += `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
+                        mediaElements += `<img src="${mediaUrl}" alt="Bild">`;
                     }
                 });
             }
-            // Für News wird hier kein Standard-Platzhalter angezeigt
-            const li = document.createElement("li");
-            li.innerHTML = `
+            const card = document.createElement("div");
+            card.className = "news-card";
+            card.innerHTML = `
                 <h3>${item.title}</h3>
                 <p>${item.content}</p>
                 ${mediaElements}
-                <small>
-                  Erstellt am: ${item.createdAt}
-                  ${item.updatedAt && item.updatedAt !== item.createdAt ? " | Bearbeitet am: " + item.updatedAt : ""}
-                </small>
+                <small>Erstellt am: ${item.createdAt}
+                ${item.updatedAt && item.updatedAt !== item.createdAt ? " | Bearbeitet am: " + item.updatedAt : ""}</small>
             `;
-            newsList.appendChild(li);
+            newsList.appendChild(card);
         });
+        
     } catch (error) {
         console.error("Fehler beim Abrufen der News:", error);
     }
@@ -61,23 +57,25 @@ async function fetchEvents() {
             // Verwende das hochgeladene Bild, falls vorhanden, ansonsten das Standard-Logo
             const imgSrc = (event.media && event.media[0]) 
                 ? event.media[0] 
-                : "https://res.cloudinary.com/da1r1e6gi/image/upload/v1742407933/Logo_m2eyz9.png";
+                : "/logo2.png";
             
             const card = document.createElement("div");
             card.className = "event-card";
             card.innerHTML = `
+            <div class="event-image-container">
                 <img src="${imgSrc}" alt="Event Bild" class="event-image">
-                <div class="event-details">
-                  <span class="event-date">${event.date}${event.time ? ', ' + event.time : ''}</span>
-                  <h3 class="event-title">${event.title}</h3>
-                  <p class="event-location"><span>📍</span> ${event.location}</p>
-                  <p>${event.content}</p>
-                  <small>
+            </div>
+            <div class="event-details">
+                <span class="event-date">${event.date}${event.time ? ', ' + event.time : ''}</span>
+                <h3 class="event-title">${event.title}</h3>
+                <p class="event-location"><span><i class="fas fa-map-marker-alt"></i></span> ${event.location}</p>
+                <p class="event-description">${event.content}</p>
+                <small>
                     Erstellt am: ${event.createdAt}
                     ${event.updatedAt && event.updatedAt !== event.createdAt ? " | Bearbeitet am: " + event.updatedAt : ""}
-                  </small>
-                </div>
-            `;
+                </small>
+            </div>
+        `;
             eventsGrid.appendChild(card);
         });
     } catch (error) {
@@ -85,8 +83,52 @@ async function fetchEvents() {
     }
 }
 
+document.addEventListener("click", function(e) {
+    if ((e.target.tagName === "IMG" || e.target.tagName === "VIDEO") && !e.target.classList.contains("no-zoom")) {
+        const overlay = document.createElement("div");
+        overlay.style.position = "fixed";
+        overlay.style.top = 0;
+        overlay.style.left = 0;
+        overlay.style.width = "100vw";
+        overlay.style.height = "100vh";
+        overlay.style.background = "rgba(0,0,0,0.8)";
+        overlay.style.display = "flex";
+        overlay.style.alignItems = "center";
+        overlay.style.justifyContent = "center";
+        overlay.style.zIndex = 9999;
+        overlay.style.cursor = "zoom-out";
 
-  
+        let clone;
+        if (e.target.tagName === "IMG") {
+            clone = document.createElement("img");
+            clone.src = e.target.src;
+            clone.style.maxWidth = "90%";
+            clone.style.maxHeight = "90%";
+        } else {
+            clone = document.createElement("video");
+            clone.src = e.target.src;
+            clone.controls = true;
+            clone.autoplay = true;
+            clone.style.maxWidth = "90%";
+            clone.style.maxHeight = "90%";
+        }
+
+        overlay.appendChild(clone);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener("click", () => document.body.removeChild(overlay));
+    }
+});
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.innerWidth <= 768) {
+      const mainContent = document.querySelector(".main-content");
+      const eventsSection = document.querySelector("#events-section");
+      if (mainContent && eventsSection) {
+        mainContent.insertBefore(eventsSection, mainContent.querySelector(".sidebar"));
+      }
+    }
+  });
+
   window.onload = function() {
     fetchNews();
     fetchEvents();

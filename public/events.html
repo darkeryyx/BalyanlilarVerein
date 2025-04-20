@@ -24,7 +24,11 @@
           const li = document.createElement("li");
           li.innerHTML = `
             <h3>${event.title}</h3>
-            <p>${event.content}</p>
+            <p class="event-description">
+  ${event.content.length > 200 ? event.content.substring(0, 200) + "..." : event.content}
+</p>
+<a href="events-detail.html?id=${event.id}" class="read-more">Mehr lesen <span>→</span></a>
+
             <p><strong>Datum:</strong> ${event.date} ${event.time ? event.time : ""}</p>
             <p><strong>Ort:</strong> ${event.location}</p>
             ${event.media && event.media.length > 0 

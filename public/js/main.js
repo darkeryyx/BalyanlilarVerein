@@ -6,7 +6,7 @@ async function fetchNews() {
         
         // Sortiere neueste News oben
         const sortedNews = news.sort((a, b) => b.id - a.id);
-        const limitedNews = sortedNews.slice(0, 3);
+        const limitedNews = sortedNews.slice(0, 4);
         
         const newsList = document.getElementById("news-list");
         newsList.innerHTML = "";
@@ -27,7 +27,9 @@ async function fetchNews() {
             card.className = "news-card";
             card.innerHTML = `
                 <h3>${item.title}</h3>
-                <p>${item.content}</p>
+<p>${item.content.length > 200 ? item.content.substring(0, 200) + "..." : item.content}</p>
+<a href="news-detail.html?id=${item.id}" class="read-more">Mehr lesen <span>→</span></a>
+
                 ${mediaElements}
                 <small>Erstellt am: ${item.createdAt}
                 ${item.updatedAt && item.updatedAt !== item.createdAt ? " | Bearbeitet am: " + item.updatedAt : ""}</small>
@@ -69,7 +71,11 @@ async function fetchEvents() {
                 <span class="event-date">${event.date}${event.time ? ', ' + event.time : ''}</span>
                 <h3 class="event-title">${event.title}</h3>
                 <p class="event-location"><span><i class="fas fa-map-marker-alt"></i></span> ${event.location}</p>
-                <p class="event-description">${event.content}</p>
+                <p class="event-description">
+                ${event.content.length > 200 ? event.content.substring(0, 200) + "..." : event.content}
+                </p>
+                <a href="events-detail.html?id=${event.id}" class="read-more">Mehr lesen <span>→</span></a>
+
                 <small>
                     Erstellt am: ${event.createdAt}
                     ${event.updatedAt && event.updatedAt !== event.createdAt ? " | Bearbeitet am: " + event.updatedAt : ""}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Details</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .event-detail-container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .event-detail-container h1 {
+      margin-bottom: 20px;
+    }
+    .event-detail-container img,
+    .event-detail-container video {
+      max-width: 100%;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .event-detail-container p {
+      line-height: 1.6;
+    }
+    .event-detail-container small {
+      color: #888;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: var(--accent, orange);
+      font-weight: bold;
+    }
+    .event-date {
+      background: var(--primary, #1C2A44);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="event-detail-container" id="event-detail">
+    <p>Lade Event...</p>
+  </div>
+
+  <script>
+    async function fetchEventDetail() {
+      const id = new URLSearchParams(window.location.search).get("id");
+      if (!id) {
+        document.getElementById("event-detail").innerHTML = "<p>Keine ID übergeben.</p>";
+        return;
+      }
+
+      try {
+        const response = await fetch("/events/" + id);
+        if (!response.ok) throw new Error("Fehler beim Laden des Events");
+        const event = await response.json();
+
+        let mediaHtml = "";
+        if (event.media && event.media.length > 0) {
+          event.media.forEach(url => {
+            const isVideo = url.match(/\.(mp4|webm|ogg|mkv)$/i);
+            mediaHtml += isVideo
+              ? `<video src="${url}" controls></video>`
+              : `<img src="${url}" alt="Event Bild">`;
+          });
+        }
+
+        document.getElementById("event-detail").innerHTML = `
+          <h1>${event.title}</h1>
+          <div class="event-date">${event.date}${event.time ? " – " + event.time : ""}</div>
+          <p><strong>Ort:</strong> ${event.location}</p>
+          <div>${mediaHtml}</div>
+          <p>${event.content}</p>
+          <small>Erstellt am: ${event.createdAt}${event.updatedAt && event.updatedAt !== event.createdAt ? " | Bearbeitet am: " + event.updatedAt : ""}</small>
+          <br><br>
+          <a href="index.html" class="back-link">← Zurück zur Startseite</a>
+        `;
+      } catch (error) {
+        console.error(error);
+        document.getElementById("event-detail").innerHTML = "<p>Fehler beim Laden des Events.</p>";
+      }
+    }
+
+    fetchEventDetail();
+  </script>
+</body>
+</html>

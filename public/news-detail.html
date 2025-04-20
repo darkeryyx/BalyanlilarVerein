@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News Details</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .detail-container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .detail-container h1 {
+      margin-bottom: 15px;
+    }
+    .detail-container img, .detail-container video {
+      max-width: 100%;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .detail-container p {
+      line-height: 1.6;
+    }
+    .detail-container small {
+      color: #888;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: var(--accent, orange);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="detail-container" id="news-detail">
+    <p>Lade News...</p>
+  </div>
+
+  <script>
+    async function fetchNewsDetail() {
+      const id = new URLSearchParams(window.location.search).get("id");
+      if (!id) {
+        document.getElementById("news-detail").innerHTML = "<p>Keine ID übergeben.</p>";
+        return;
+      }
+
+      try {
+        const response = await fetch("/news/" + id);
+        if (!response.ok) throw new Error("Fehler beim Laden der News");
+        const data = await response.json();
+
+        let mediaHtml = "";
+        if (data.media && data.media.length > 0) {
+          data.media.forEach(url => {
+            const isVideo = url.match(/\.(mp4|webm|ogg|mkv)$/i);
+            mediaHtml += isVideo
+              ? `<video src="${url}" controls></video>`
+              : `<img src="${url}" alt="Bild">`;
+          });
+        }
+
+        document.getElementById("news-detail").innerHTML = `
+          <h1>${data.title}</h1>
+          <small>Erstellt am: ${data.createdAt}${data.updatedAt !== data.createdAt ? " | Bearbeitet am: " + data.updatedAt : ""}</small>
+          <div>${mediaHtml}</div>
+          <p>${data.content}</p>
+          <a href="index.html" class="back-link">← Zurück zur Startseite</a>
+        `;
+      } catch (error) {
+        console.error(error);
+        document.getElementById("news-detail").innerHTML = "<p>Fehler beim Laden der News.</p>";
+      }
+    }
+
+    fetchNewsDetail();
+  </script>
+</body>
+</html>

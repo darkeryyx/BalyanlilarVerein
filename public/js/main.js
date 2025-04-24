@@ -14,21 +14,19 @@ async function fetchNews() {
         limitedNews.forEach(item => {
             let mediaElements = '';
             if (item.media && item.media.length > 0) {
-                item.media.forEach(mediaUrl => {
-                    const isVideo = mediaUrl.toLowerCase().match(/\.(mp4|webm|ogg|mkv)$/);
-                    if (isVideo) {
-                        mediaElements += `<video src="${mediaUrl}" controls></video>`;
-                    } else {
-                        mediaElements += `<img src="${mediaUrl}" alt="Bild">`;
-                    }
-                });
-            }
+                const firstMedia = item.media[0];
+                const isVideo = firstMedia.toLowerCase().match(/\.(mp4|webm|ogg|mkv)$/);
+                mediaElements = isVideo
+                  ? `<video src="${firstMedia}" controls></video>`
+                  : `<img src="${firstMedia}" alt="Bild">`;
+              }
+              
             const card = document.createElement("div");
             card.className = "news-card";
             card.innerHTML = `
                 <h3>${item.title}</h3>
-<p>${item.content.length > 200 ? item.content.substring(0, 200) + "..." : item.content}</p>
-<a href="news-detail.html?id=${item.id}" class="read-more">Mehr lesen <span>→</span></a>
+                <p>${item.content.length > 200 ? item.content.substring(0, 200) + "..." : item.content}</p>
+                <a href="news-detail.html?id=${item.id}" class="read-more">Mehr lesen <span>→</span></a>
 
                 ${mediaElements}
                 <small>Erstellt am: ${item.createdAt}
@@ -57,13 +55,13 @@ async function fetchEvents() {
         let mediaHtml = "";
   
         if (event.media && event.media.length > 0) {
-          event.media.forEach(url => {
-            const isVideo = url.toLowerCase().match(/\.(mp4|webm|ogg|mkv)$/);
-            mediaHtml += isVideo
-              ? `<video src="${url}" controls class="event-media"></video>`
-              : `<img src="${url}" alt="Bild" class="event-media">`;
-          });
-        } else {
+            const firstMedia = event.media[0];
+            const isVideo = firstMedia.toLowerCase().match(/\.(mp4|webm|ogg|mkv)$/);
+            mediaHtml = isVideo
+              ? `<video src="${firstMedia}" controls class="event-media"></video>`
+              : `<img src="${firstMedia}" alt="Bild" class="event-media">`;
+          }
+           else {
           mediaHtml = `<img src="/logo2.png" alt="Standardbild" class="event-media">`;
         }
   

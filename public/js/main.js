@@ -24,13 +24,17 @@ async function fetchNews() {
             const card = document.createElement("div");
             card.className = "news-card";
             card.innerHTML = `
-                <h3>${item.title}</h3>
+                <div class="card-content">
+                <h3 class="news-title" title="${item.title}">${item.title}</h3>
                 <p>${item.content.length > 200 ? item.content.substring(0, 200) + "..." : item.content}</p>
                 <a href="news-detail.html?id=${item.id}" class="read-more">Mehr lesen <span>→</span></a>
-
                 ${mediaElements}
-                <small>Erstellt am: ${item.createdAt}
-                ${item.updatedAt && item.updatedAt !== item.createdAt ? " | Bearbeitet am: " + item.updatedAt : ""}</small>
+                </div>
+                <div class="card-footer">
+                ${item.updatedAt && item.updatedAt !== item.createdAt ? `<div class="modified">Bearbeitet am: ${item.updatedAt}</div>` : ""}
+                <div class="created">Erstellt am: ${item.createdAt}</div>
+                </div>
+
             `;
             newsList.appendChild(card);
         });
@@ -72,17 +76,20 @@ async function fetchEvents() {
             ${mediaHtml}
           </div>
           <div class="event-details">
+            <div class="card-content">
             <span class="event-date">${event.date}${event.time ? ", " + event.time : ""}</span>
-            <h3 class="event-title">${event.title}</h3>
+            <h3 class="event-title" title="${event.title}">${event.title}</h3>
             <p class="event-location"><span><i class="fas fa-map-marker-alt"></i></span> ${event.location}</p>
             <p class="event-description">
               ${event.content.length > 200 ? event.content.substring(0, 200) + "..." : event.content}
             </p>
             <a href="events-detail.html?id=${event.id}" class="read-more">Mehr lesen <span>→</span></a>
-            <small>
-              Erstellt am: ${event.createdAt}
-              ${event.updatedAt && event.updatedAt !== event.createdAt ? " | Bearbeitet am: " + event.updatedAt : ""}
-            </small>
+            </div>
+            <div class="card-footer">
+            ${event.updatedAt && event.updatedAt !== event.createdAt ? `<div class="modified">Bearbeitet am: ${event.updatedAt}</div>` : ""}
+            <div class="created">Erstellt am: ${event.createdAt}</div>
+            </div>
+
           </div>
         `;
         eventsGrid.appendChild(card);

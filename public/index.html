@@ -714,14 +714,55 @@
         }
 
         .read-more {
-  color: var(--accent);
-  font-weight: bold;
-  text-decoration: none;
-  display: inline-block;
-  margin-top: 10px;
+        color: var(--accent);
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 10px;
+        }
+        .read-more:hover {
+        text-decoration: underline;
+        }
+        .news-card h3,
+.event-card h3 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
 }
-.read-more:hover {
-  text-decoration: underline;
+.card-footer {
+  font-size: 0.75rem;
+  color: #888;
+ /* margin-top: auto;
+  padding-top: 15px;*/
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* oder center, wenn du es zentriert willst */
+}
+.news-card,
+.event-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  height: 100%; /* wichtig, damit alles gleich hoch bleibt */
+}
+
+.card-content {
+  padding: 20px;
+  flex-grow: 1; /* Inhalt füllt den Platz bis zum Footer */
+}
+
+.card-footer {
+  font-size: 0.75rem;
+  color: #888;
+  padding: 10px 20px;
+  border-top: 1px solid #eee;
+  text-align: right;
 }
 
     </style>

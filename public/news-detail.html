@@ -70,7 +70,8 @@
           <small>Erstellt am: ${data.createdAt}${data.updatedAt !== data.createdAt ? " | Bearbeitet am: " + data.updatedAt : ""}</small>
           <div>${mediaHtml}</div>
           <p>${data.content}</p>
-          <a href="index.html" class="back-link">← Zurück zur Startseite</a>
+          <a href="index.html" class="back-link">← Zur Startseite</a><br>
+          <a href="gallery.html" class="back-link">← Zur Galerie</a>
         `;
       } catch (error) {
         console.error(error);

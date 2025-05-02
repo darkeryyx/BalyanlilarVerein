@@ -80,7 +80,7 @@
         .navigation {
             display: flex;
             justify-content: center;
-            font-size: 1.1rem;
+        
             gap: 20px;
             margin-top: 15px;
             }
@@ -88,7 +88,7 @@
         .navigation a {
             color: white;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: normal;
             transition: color 0.3s;
             padding: 5px 10px;
             border-radius: 4px;
@@ -187,40 +187,6 @@
             margin-bottom: 60px;
         }
 
-        @media (max-width: 768px) {
-
-            .main-content {
-                display: flex;
-                flex-direction: column;
-            }
-            .about-content {
-                grid-template-columns: 1fr;
-            }
-            #news-section {
-                order: 1;
-            }
-
-            #events-section {
-                order: 2;
-            }
-
-            .sidebar {
-                order: 3;
-            }
-
-            .header-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .navigation {
-                margin-top: 15px;
-            }
-            
-            .hero h1 {
-                font-size: 2rem;
-            }
-        }
         
         /* News Section */
         .section-title {
@@ -400,20 +366,20 @@
             }
 
             .event-card-media img,
-.event-card-media video {
-  width: 100%;
-  max-height: 250px;
-  object-fit: cover;
-  border-radius: 12px 12px 0 0;
-  display: block;
-}
-.event-media {
-  width: 100%;
-  max-height: 250px;
-  object-fit: cover;
-  border-radius: 12px 12px 0 0;
-  display: block;
-}
+            .event-card-media video {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 12px 12px 0 0;
+            display: block;
+            }
+            .event-media {
+            width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            border-radius: 12px 12px 0 0;
+            display: block;
+            }
 
         .event-details {
             padding: 20px;
@@ -558,10 +524,10 @@
             border-top: 1px solid rgba(255,255,255,0.1);
         }
         .news-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 30px;
-        }
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+}
 
         .mobile-info-boxes {
         display: none;
@@ -581,19 +547,6 @@
         font-weight: bold;
         font-size: 0.95rem;
         box-shadow: 0 3px 8px rgba(0,0,0,0.1);
-        }
-
-        @media (max-width: 768px) {
-        .mobile-info-boxes {
-            display: flex;
-        }
-        }
-        @media (max-width: 768px) {
-        #news-section,
-        #events-section,
-        .sidebar {
-            margin-bottom: 40px;
-        }
         }
 
         .news-grid .news-card {
@@ -880,6 +833,133 @@
 #membership .sidebar-title::before {
     content: '\f0c0'; /* Benutzergruppen-Icon für Mitgliedschaft */
 }
+
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: white;
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  z-index: 1001;
+}
+
+.sidebar-toggle {
+  display: none;
+  background: var(--secondary);
+  color: white;
+  border: none;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 30px;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.header-menu-toggle {
+  display: none;
+  background-color: rgba(255, 255, 255, 0.1); /* leicht transparent */
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3); /* dezente Umrandung */
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 25px;
+  margin: 10px auto;
+  cursor: pointer;
+  backdrop-filter: blur(2px); /* subtile Wirkung */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: 0.3s ease, box-shadow 0.3s ease;
+  margin-top: 30px;
+}
+.header-menu-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 768px) {
+    .news-grid {
+    grid-template-columns: 1fr; /* Volle Breite auf Mobilgeräten */
+  }
+  .header-menu-toggle {
+    display: block;
+  }
+
+
+  .navigation {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--primary);
+    padding: 10px 0;
+  }
+
+  .navigation a {
+    padding: 10px;
+    color: white;
+    text-decoration: none;
+    width: 100%;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .navigation a:first-child {
+    border-top: none;
+  }
+
+
+  .navigation.show {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: block;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .sidebar.show {
+    display: block;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: #fff;
+    z-index: 999;
+    padding: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebar-toggle {
+    display: block;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--secondary);
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    font-weight: bold;
+    z-index: 999;
+  }
+  .main-content {
+    display: block; 
+  }
+  .about-content {
+    display: flex;
+    flex-direction: column; /* Stacke Bild und Text untereinander */
+  }
+}
+
     </style>
 </head>
 <body>
@@ -893,13 +973,22 @@
               </a>              
             <div class="site-title">AVRUPA BALYANLILAR KÜLTÜR ve DAYANIŞMA DERNEĞI</div>
           </div>
-          <nav class="navigation">
+          <button class="header-menu-toggle" id="headerMenuToggle">☰ Menü</button>
+
+          <nav class="navigation" id="mainNav">
+            <a href="#news-section">News</a>
+            <a href="#events-section">Events</a>
+            <a href="gallery.html">Fotos/Videos</a>
             <a href="#about">Über uns</a>
             <a href="#contact">Kontakt</a>
           </nav>
         </div>
       </header>
-      
+
+        <!-- 🟠 Sidebar-Toggle für Mobilgeräte -->
+        <button class="sidebar-toggle" id="sidebarToggle">
+            Spenden/Mitglied werden</button>
+
 
     <!-- Hero Section -->
     <section class="hero" id="hero">
@@ -926,7 +1015,7 @@
             </section>
 
                     <!-- Sidebar -->
-            <aside class="sidebar">
+            <aside class="sidebar" id="sidebar">
                 <!-- Spenden-Box -->
                 <div class="sidebar-box" id="donate">
                     <h3 class="sidebar-title">Unterstützen Sie uns</h3>

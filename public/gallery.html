@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Galerie – Kulturverein</title>
+  <link rel="stylesheet" href="/css/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+      padding: 40px;
+    }
+    .gallery-item {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .gallery-item img, .gallery-item video {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid #eee;
+    }
+    .media-title {
+      padding: 10px;
+      font-weight: bold;
+      color: #1C2A44;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Optional: Navigation hier einfügen -->
+  </header>
+  <main>
+    <h1 style="text-align:center; padding-top: 30px;">📸 Galerie</h1>
+    <div id="gallery-grid" class="gallery-grid"></div>
+  </main>
+  <script src="js/gallery.js"></script>
+</body>
+</html>

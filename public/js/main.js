@@ -146,6 +146,38 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  document.addEventListener("DOMContentLoaded", function () {
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebar = document.getElementById("sidebar");
+
+    sidebarToggle.addEventListener("click", function (e) {
+      sidebar.classList.toggle("show");
+      e.stopPropagation(); // damit es sich nicht sofort schließt
+    });
+
+    // Klick außerhalb schließt Sidebar
+    document.addEventListener("click", function (e) {
+      if (sidebar.classList.contains("show") && !sidebar.contains(e.target) && e.target !== sidebarToggle) {
+        sidebar.classList.remove("show");
+      }
+    });
+
+    // Scrollen schließt Sidebar
+    window.addEventListener("scroll", function () {
+      if (sidebar.classList.contains("show")) {
+        sidebar.classList.remove("show");
+      }
+    });
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const headerToggle = document.getElementById("headerMenuToggle");
+    const nav = document.getElementById("mainNav");
+
+    headerToggle.addEventListener("click", function () {
+      nav.classList.toggle("show");
+    });
+  });
   window.onload = function() {
     fetchNews();
     fetchEvents();

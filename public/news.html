@@ -1,15 +1,141 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Alle News</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="/css/fontawesome/css/all.min.css" />
+  <style>
+    :root {
+      --primary: #1C2A44;
+      --secondary: #e67e22;
+      --light: #f4f4f4;
+    }
+
+    body {
+      background-color: var(--light);
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    main {
+      padding: 40px 20px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .gallery-item {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .gallery-link {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .gallery-item img,
+    .gallery-item video {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .media-title {
+      padding: 15px 15px 5px;
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 1.1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .news-snippet {
+      padding: 0 15px;
+      flex-grow: 1;
+      font-size: 0.95rem;
+    }
+
+    .news-meta {
+      padding: 0 15px 10px;
+      font-size: 0.85rem;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .news-meta i {
+      color: var(--secondary);
+      margin-right: 5px;
+    }
+
+    .details-bar {
+      background-color: var(--secondary);
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-top: auto;
+    }
+
+    a.back-link {
+      display: inline-block;
+      margin: 40px auto 0;
+      background-color: var(--secondary);
+      color: white;
+      padding: 12px 24px;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    a.back-link:hover {
+      background-color: #cf6a12;
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
 <body>
-  <h1>Alle News</h1>
-  <ul id="all-news-list"></ul>
-  <a href="index.html">Zurück zur Startseite</a>
+  <header>
+    <h1>Alle News</h1>
+  </header>
+  <main>
+    <div id="all-news-list" class="gallery-grid"></div>
+    <div style="text-align: center;">
+      <a href="index.html" class="back-link">Zurück zur Startseite</a>
+    </div>
+  </main>
   <script>
     async function fetchAllNews() {
       try {
@@ -17,35 +143,46 @@
         if (!response.ok) throw new Error("Fehler beim Abrufen der News");
         const news = await response.json();
         const sortedNews = news.sort((a, b) => b.id - a.id);
-        const list = document.getElementById("all-news-list");
-        list.innerHTML = "";
-        sortedNews.forEach(item => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <h3>${item.title}</h3>
-            <p>${item.content.length > 200 ? item.content.substring(0, 200) + "..." : item.content}</p>
-<a href="news-detail.html?id=${item.id}" class="read-more">Mehr lesen <span>→</span></a>
+        const container = document.getElementById("all-news-list");
+        container.innerHTML = "";
 
-            ${item.media && item.media.length > 0 
-                ? item.media.map(mediaUrl => {
-                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
-                                    mediaUrl.toLowerCase().endsWith('.webm') ||
-                                    mediaUrl.toLowerCase().endsWith('.ogg') ||
-                                    mediaUrl.toLowerCase().endsWith('.mkv');
-                    return isVideo 
-                        ? `<video src="${mediaUrl}" width="320" height="240" controls></video>`
-                        : `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
-                }).join('') 
-                : '' /* Für News gibt es hier keinen Standard-Platzhalter */
-            }
-            <small>Erstellt am: ${item.createdAt}</small>
+        sortedNews.forEach(item => {
+  let mediaHtml = '';
+  if (item.media && item.media.length > 0) {
+    const url = item.media[0];                    // nur erstes Medium
+    const isVideo = /\.(mp4|webm|ogg|mkv)$/i.test(url);
+    mediaHtml = isVideo
+      ? `<video src="${url}" controls></video>`
+      : `<img src="${url}" alt="Bild">`;
+  }
+
+          const updatedAtHtml = item.updatedAt && item.updatedAt !== item.createdAt
+            ? `<div><i class="fas fa-edit"></i> Bearbeitet am: ${item.updatedAt}</div>`
+            : "";
+
+          const card = document.createElement("div");
+          card.className = "gallery-item";
+          card.innerHTML = `
+            <a href="news-detail.html?id=${item.id}" class="gallery-link">
+              ${mediaHtml}
+              <div class="media-title" title="${item.title}">${item.title}</div>
+              <div class="news-snippet">
+                ${item.content.length > 200 ? item.content.substring(0, 200) + "..." : item.content}
+              </div>
+              <div class="news-meta">
+                <div><i class="fas fa-clock"></i> Erstellt am: ${item.createdAt}</div>
+                ${updatedAtHtml}
+              </div>
+              <div class="details-bar">Mehr lesen <i class="fas fa-arrow-right"></i></div>
+            </a>
           `;
-          list.appendChild(li);
+          container.appendChild(card);
         });
       } catch (error) {
         console.error("Fehler beim Abrufen der News:", error);
       }
     }
+
     fetchAllNews();
   </script>
 </body>

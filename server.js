@@ -73,22 +73,36 @@ const upload = multer({
     }
 });
 
-app.use(helmet({
-  contentSecurityPolicy: {
-      directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          connectSrc: ["'self'", "https://res.cloudinary.com"],
-          imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-          mediaSrc: ["'self'", "https://res.cloudinary.com"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          fontSrc: ["'self'"],
-          objectSrc: ["'none'"],
-          upgradeInsecureRequests: []
-      }
-  },
-  referrerPolicy: { policy: "same-origin" }  // Changed from strict-origin-when-cross-origin
-}));
+// direkt ganz oben in server.js, noch vor allen anderen Middlewares:
+const isProd = process.env.NODE_ENV === 'production';
+
+if (!isProd) {
+  console.log('🛠️  DEV-Modus: Helmet wird NICHT geladen – kein CSP/COOP/HSTS');
+} else {
+  // hier kommt dein bisheriger Helmet-Block rein:
+  const cspDirectives = {
+    defaultSrc: ["'self'"],
+    scriptSrc:  ["'self'", "'unsafe-inline'"],
+    connectSrc: ["'self'", "https://res.cloudinary.com"],
+    imgSrc:     ["'self'", "data:", "https://res.cloudinary.com"],
+    mediaSrc:   ["'self'", "https://res.cloudinary.com", "blob:"],
+    styleSrc:   ["'self'", "'unsafe-inline'"],
+    fontSrc:    ["'self'"],
+    objectSrc:  ["'none'"],
+    upgradeInsecureRequests: []
+  };
+
+  app.use(helmet({
+    contentSecurityPolicy: { directives: cspDirectives },
+    hsts:                   { maxAge: 31536000, includeSubDomains: true },
+    crossOriginOpenerPolicy:{ policy: 'same-origin' },
+    crossOriginEmbedderPolicy:{ policy: 'require-corp' },
+    referrerPolicy:         { policy: 'same-origin' }
+  }));
+}
+
+
+
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
@@ -291,8 +305,15 @@ function loadEvents() {
       }
   
       let existingMedia = events[index].media || [];
+      const removedFields = req.body.removedMedia || req.body['removedMedia[]'];
+if (removedFields) {
+  const removed = Array.isArray(removedFields)
+    ? removedFields
+    : [removedFields];
+  existingMedia = existingMedia.filter(url => !removed.includes(url));
+}
       const allMedia = [...existingMedia, ...newMediaUrls];
-  
+   
       events[index] = {
         ...events[index],
         title: req.body.title,
@@ -658,6 +679,13 @@ app.put("/news/:id", upload.array("media", 10), async (req, res) => {
       }
 
       let existingMedia = news[index].media || [];
+      const removedFields = req.body.removedMedia || req.body['removedMedia[]'];
+if (removedFields) {
+  const removed = Array.isArray(removedFields)
+    ? removedFields
+    : [removedFields];
+  existingMedia = existingMedia.filter(url => !removed.includes(url));
+}
       const allMedia = [...existingMedia, ...newMediaUrls];
 
       news[index] = {
@@ -768,10 +796,14 @@ app.delete("/news/:id", (req, res) => {
 });*/
 
 // Server starten 
+/*
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server läuft auf http://localhost:${PORT}`);
-})/
+})/*/
+app.listen(3000, '0.0.0.0', () => {
+  console.log('Server läuft auf Port 3000 (alle Netzwerk-Interfaces)');
+});
 
 
 

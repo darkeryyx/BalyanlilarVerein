@@ -5,48 +5,176 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Alle Veranstaltungen</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="/css/fontawesome/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1C2A44;
+      --secondary: #e67e22;
+      --light: #f4f4f4;
+    }
+
+    body {
+      background-color: var(--light);
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    main {
+      padding: 40px 20px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .gallery-item {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      transition: transform 0.2s ease;
+      position: relative;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .gallery-item img,
+    .gallery-item video {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .gallery-link {
+      color: var(--primary);
+      text-decoration: none;
+      display: block;
+      position: relative;
+    }
+
+    .gallery-link:hover .media-title {
+      text-decoration: underline;
+    }
+
+    .media-title {
+      padding: 15px 15px 5px;
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 1.1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-meta {
+      font-size: 0.9rem;
+      color: #666;
+      padding: 0 15px 15px;
+      line-height: 1.5;
+    }
+
+    .event-meta i {
+      margin-right: 5px;
+      color: var(--secondary);
+    }
+
+    .details-bar {
+      background-color: var(--secondary);
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-top: auto;
+    }
+
+    a.back-link {
+      display: inline-block;
+      margin: 40px auto 0;
+      background-color: var(--secondary);
+      color: white;
+      padding: 12px 24px;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    a.back-link:hover {
+      background-color: #cf6a12;
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
 <body>
-  <h1>Alle Veranstaltungen</h1>
-  <ul id="all-events-list"></ul>
-  <a href="index.html">Zurück zur Startseite</a>
+  <header>
+    <h1>Alle Veranstaltungen</h1>
+  </header>
+  <main>
+    <div id="all-events-list" class="gallery-grid"></div>
+    <div style="text-align: center;">
+      <a href="index.html" class="back-link">Zurück zur Startseite</a>
+    </div>
+  </main>
   <script>
     async function fetchAllEvents() {
       try {
         const response = await fetch("/events");
         if (!response.ok) throw new Error("Fehler beim Abrufen der Veranstaltungen");
         const events = await response.json();
-        // Sortiere Events, falls nötig:
         const sortedEvents = events.sort((a, b) => b.id - a.id);
-        const list = document.getElementById("all-events-list");
-        list.innerHTML = "";
-        sortedEvents.forEach(event => {
-          const li = document.createElement("li");
-          li.innerHTML = `
-            <h3>${event.title}</h3>
-            <p class="event-description">
-  ${event.content.length > 200 ? event.content.substring(0, 200) + "..." : event.content}
-</p>
-<a href="events-detail.html?id=${event.id}" class="read-more">Mehr lesen <span>→</span></a>
+        const container = document.getElementById("all-events-list");
+        container.innerHTML = "";
 
-            <p><strong>Datum:</strong> ${event.date} ${event.time ? event.time : ""}</p>
-            <p><strong>Ort:</strong> ${event.location}</p>
-            ${event.media && event.media.length > 0 
-                ? event.media.map(mediaUrl => {
-                    const isVideo = mediaUrl.toLowerCase().endsWith('.mp4') ||
-                                    mediaUrl.toLowerCase().endsWith('.webm') ||
-                                    mediaUrl.toLowerCase().endsWith('.ogg') ||
-                                    mediaUrl.toLowerCase().endsWith('.mkv');
-                    return isVideo 
-                        ? `<video src="${mediaUrl}" width="320" height="240" controls></video>`
-                        : `<img src="${mediaUrl}" alt="Bild" style="max-width: 300px;">`;
-                }).join('') 
-                : `<img src="https://res.cloudinary.com/da1r1e6gi/image/upload/v1742407933/Logo_m2eyz9.png" alt="Kein Bild vorhanden" style="max-width: 300px;">`
-            }
-            <small>Erstellt am: ${event.createdAt}</small>
-          `;
-          list.appendChild(li);
-        });
+        sortedEvents.forEach(event => {
+  let mediaHtml = '';
+  if (event.media && event.media.length > 0) {
+    const url = event.media[0];                  // nur erstes Medium
+    const isVideo = /\.(mp4|webm|ogg|mkv)$/i.test(url);
+    mediaHtml = isVideo
+      ? `<video src="${url}" controls></video>`
+      : `<img src="${url}" alt="Bild">`;
+  }
+
+  const card = document.createElement("div");
+  card.className = "gallery-item";
+  card.innerHTML = `
+    <a href="events-detail.html?id=${event.id}" class="gallery-link">
+      ${mediaHtml}
+      <div class="media-title" title="${event.title}">${event.title}</div>
+      <div class="event-meta">
+        <div><i class="fas fa-calendar-alt"></i> ${event.date} ${event.time || ""}</div>
+        <div><i class="fas fa-map-marker-alt"></i> ${event.location}</div>
+      </div>
+      <div class="details-bar">Details anzeigen <i class="fas fa-arrow-right"></i></div>
+    </a>
+  `;
+  container.appendChild(card);
+});
+
       } catch (error) {
         console.error("Fehler beim Abrufen der Veranstaltungen:", error);
       }

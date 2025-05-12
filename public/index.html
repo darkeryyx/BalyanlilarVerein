@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/fontawesome/css/all.min.css">   
+    <link rel="stylesheet" href="/css/fontawesome/css/all.min.css">
     <title>AVRUPA BALYANLILAR KÜLTÜR ve DAYANIŞMA DERNEĞI</title>
+    <script src="/js/translations.js"></script>
+    <script src="/js/i18n.js" defer></script>
     <style>
         :root {
             --primary: #1C2A44;
@@ -31,6 +33,35 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
+        }
+
+        /* Language Switcher */
+        .lang-switcher {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 5px;
+            z-index: 10002;
+            display: flex;
+            gap: 5px;
+        }
+        .lang-switcher button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition:  0.3s;
+        }
+        .lang-switcher button:hover,
+        .lang-switcher button.active {
+            background: var(--primary);
         }
         
         /* Header */
@@ -372,6 +403,7 @@
             object-fit: cover;
             border-radius: 12px 12px 0 0;
             display: block;
+            cursor: pointer;
             }
             .event-media {
             width: 100%;
@@ -435,6 +467,9 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
+        .about-image:hover {
+            cursor: pointer;
+        }
         .about-text h2 {
             font-size: 2rem;
             margin-bottom: 20px;
@@ -494,29 +529,6 @@
             color: var(--secondary);
         }
         
-        .social-icons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .social-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .social-icon:hover {
-            background-color: var(--secondary);
-            transform: translateY(-3px);
-        }
         
         .footer-bottom {
             text-align: center;
@@ -629,14 +641,7 @@
         .footer-section p {
         color: #bbb;
         }
-        .social-icon {
-        transition: all 0.3s;
-        font-size: 1.2rem;
-        }
-        .social-icon:hover {
-        background-color: var(--secondary);
-        transform: translateY(-5px);
-        }
+        
         .fade-in {
         opacity: 0;
         transform: translateY(20px);
@@ -960,10 +965,143 @@
   }
 }
 
+/* Hero-Sektion mit Hintergrundbild */
+#hero {
+  /* Pfad zum Bild anpassen */
+  background-image: url('titelbild.png');
+  background-size: cover;            /* skaliert das Bild, damit es den Container füllt */
+  background-position: 50% 30%;       /* zentriert das Bild */
+  background-repeat: no-repeat;      /* wiederholt das Bild nicht */
+  position: relative;                /* für z-index-Steuerung */
+  height: 60vh;                      /* Beispiel-Höhe – anpassen nach Bedarf */
+  display: flex;                     /* Text vertikal/horizontal zentrieren */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Damit das Hero-Content über dem Bild liegt */
+.hero-content {
+  position: relative;
+  z-index: 1;
+  color: #fff;                       /* Textfarbe (hell auf dunklem Bild) */
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Optional: halbtransparenter Overlay für besseren Kontrast */
+#hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);    /* schwarzer Overlay mit 40% Deckkraft */
+  z-index: 0;
+}
+
+.social-icons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+/* Facebook blau */
+.social-icon.facebook {
+  background-color: #1877f2;
+}
+.social-icon.facebook:hover {
+  opacity: 0.8;
+  transform: scale(1.1);
+}
+
+/* Instagram Verlauf per radial-gradient */
+.social-icon.instagram {
+  background: radial-gradient(
+    circle at 30% 107%,
+    #fdf497 0%,
+    #fdf497 5%,
+    #fd5949 45%,
+    #d6249f 60%,
+    #285aeb 90%
+  );
+}
+.social-icon.instagram:hover {
+  opacity: 0.8;
+  transform: scale(1.1);
+}
+
+.footer-legal {
+ /* background-color: #f5f5f5;*/
+  padding: 1rem 0;
+  padding-top: 0;
+}
+
+.legal-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8rem;
+  color: white;
+}
+
+.legal-button {
+  display: inline-block;
+  padding: 6px 12px;
+  /*border: 1px solid #ccc;*/
+  border-radius: 4px;
+ /* background-color: #fff;*/
+  text-decoration: none;
+  color: white;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.legal-button:hover {
+  background-color: var(--secondary);
+  border-color: var(--secondary);
+}
+
+.opening-hours {
+  padding: 6px 12px;
+  color: #777;
+}
+
+.hero-content {
+    background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0, 0.4); /* Black w/opacity/see-through */
+  color: white;
+  font-weight: bold;
+  border: 2px solid #f1f1f1;
+  border-radius: 12px;
+ /* position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  width: 80%;*/
+  padding: 20px;
+  text-align: center;
+}
     </style>
 </head>
 <body>
-      
+    <!-- Language Switcher -->
+    <div class="lang-switcher">
+        <button id="btn-de">DE</button>
+        <button id="btn-tr">TR</button>
+    </div>
     <!-- Header -->
     <header>
         <div class="container">
@@ -971,37 +1109,35 @@
             <a href="#hero">
                 <img src="/logo2.png" alt="Logo" class="logo no-zoom">
               </a>              
-            <div class="site-title">AVRUPA BALYANLILAR KÜLTÜR ve DAYANIŞMA DERNEĞI</div>
+              <div class="site-title" data-i18n="site.title"></div>
           </div>
-          <button class="header-menu-toggle" id="headerMenuToggle">☰ Menü</button>
+          <button class="header-menu-toggle" id="headerMenuToggle"  data-i18n="header.menu"></button>
 
           <nav class="navigation" id="mainNav">
-            <a href="#news-section">News</a>
-            <a href="#events-section">Events</a>
-            <a href="gallery.html">Fotos/Videos</a>
-            <a href="#about">Über uns</a>
-            <a href="#contact">Kontakt</a>
+            <a href="#news-section" data-i18n="nav.news"></a>
+            <a href="#events-section" data-i18n="nav.events"></a>
+            <a href="gallery.html" data-i18n="nav.gallery"></a>
+            <a href="#about" data-i18n="nav.about"></a>
+            <a href="#contact" data-i18n="nav.contact"></a>
           </nav>
         </div>
       </header>
 
         <!-- 🟠 Sidebar-Toggle für Mobilgeräte -->
-        <button class="sidebar-toggle" id="sidebarToggle">
-            Spenden/Mitglied werden</button>
-
+        <button class="sidebar-toggle" id="sidebarToggle" data-i18n="sidebar.toggle"> </button>
 
     <!-- Hero Section -->
     <section class="hero" id="hero">
         <div class="hero-content">
-            <h1>Willkommen im Kulturzentrum</h1>
-            <p>Wir fördern kulturellen Austausch, Bildung und Gemeinschaft. Entdecken Sie unsere Aktivitäten und werden Sie Teil unserer Gemeinschaft.</p>
+            <h1 data-i18n="hero.heading"></h1>
+            <p data-i18n="hero.subheading"></p>
             <!--<a href="#membership" class="cta-button">Mitglied werden</a>-->
         </div>
     </section>
     
     <div class="mobile-info-boxes">
-        <a href="#donate" class="info-box">💛 Spenden</a>
-        <a href="#membership" class="info-box">🤝 Mitglied werden</a>
+        <a href="#donate" class="info-box" data-i18n="sidebar.toggle"></a>
+        <a href="#membership" class="info-box" data-i18n="sidebar.toggle"></a>
       </div>
 
     <!-- Main Content -->
@@ -1009,42 +1145,43 @@
         <div class="main-content">
             <!-- News Section -->
             <section id="news-section">
-                <h2>Aktuelle News</h2>
+                <h2 data-i18n="section.news.title"></h2>
                 <div id="news-list" class="news-grid"></div>
-                <a href="/news.html" class="view-all-button">Alle News anzeigen</a>
+                <a href="/news.html" class="view-all-button" data-i18n="btn.view_all_news"></a>
             </section>
 
                     <!-- Sidebar -->
             <aside class="sidebar" id="sidebar">
                 <!-- Spenden-Box -->
                 <div class="sidebar-box" id="donate">
-                    <h3 class="sidebar-title">Unterstützen Sie uns</h3>
-                    <p class="donate-info">Ihre Spende hilft uns, kulturelle Projekte zu fördern und unsere Gemeinschaft zu stärken.</p>
+                    <h3 class="sidebar-title" data-i18n="donate.title"></h3>
+                    <p class="donate-info" data-i18n="donate.info"></p>
                     
                     <div class="bank-details">
-                        <p><strong>Kontoinhaber:</strong> AVRUPA BALYANLILAR KÜLTÜR ve DAYANIŞMA DERNEĞI</p>
-                        <p><strong>IBAN:</strong> DE90 3705 0198 1900 7136 01</p>
-                        <p><strong>BIC:</strong> COLSDE33XXX</p>
-                        <p><strong>Bank:</strong> Sparkasse Köln Bonn</p>
-                        <p><strong>Verwendungszweck:</strong> Spende</p>
-                    </div>
+                        <p data-i18n-html="donate.bank.owner_html"></p>
+                        <p data-i18n-html="donate.bank.iban_html"></p>
+                        <p data-i18n-html="donate.bank.bic_html"></p>
+                        <p data-i18n-html="donate.bank.bankname_html"></p>
+                        <p data-i18n-html="donate.bank.purpose_html"></p>
+                      </div>
+                      
                 </div>
                 
                 <!-- Mitgliedschaft-Box -->
                 <div class="sidebar-box" id="membership">
-                    <h3 class="sidebar-title">Mitglied werden</h3>
-                    <p class="membership-info">Werden Sie Teil unserer Gemeinschaft und profitieren Sie von vielen Vorteilen. Als Mitglied können Sie an allen Veranstaltungen teilnehmen und unser Kulturzentrum mitgestalten.</p>
+                    <h3 class="sidebar-title" data-i18n="membership.title"></h3>
+                    <p class="membership-info" data-i18n="membership.info"></p>
                     
-                    <p><strong>Monatlicher Mitgliedsbeitrag:</strong></p>
+                    <p data-i18n-html="membership.fee"></p>
                     <ul style="list-style-type: none; margin-bottom: 15px; padding-left: 0;">
-                        <li>10€ für eine Person</li>
-                        <li>15€ für zwei Personen</li>
-                        <li>2€ für Schüler/Studenten</li>
-                        <li>10€ für Rentner (2 Personen)</li>
+                        <li><p data-i18n="membership.fee1"></p></li>
+                        <li><p data-i18n="membership.fee2"></p></li>
+                        <li><p data-i18n="membership.fee3"></p></li>
+                        <li><p data-i18n="membership.fee4"></p></li>
                     </ul>
                     
                     <a href="/Balyanlilar_Kayit_Formu.pdf" class="download-button" download>
-                        <span>↓</span> Anmeldeformular herunterladen
+                        <p data-i18n="membership.download" ></p>
                     </a>
                 </div>
             </aside>
@@ -1055,9 +1192,9 @@
                 <!-- Events Section -->
                 <section id="events-section">
                     <div class="container">
-                    <h2>Kommende Veranstaltungen</h2>
+                    <h2 data-i18n="section.events.title"></h2>
                     <div class="events-grid"></div>
-                    <a href="/events.html" class="view-all-button">Alle Veranstaltungen anzeigen</a>
+                    <a href="/events.html" class="view-all-button" data-i18n="btn.view_all_events"></a>
                     </div>
                 </section>
     
@@ -1065,12 +1202,12 @@
     <section class="about-section" id="about">
         <div class="container">
             <div class="about-content">
-                <img src="/api/placeholder/600/400" alt="Über uns Bild" class="about-image">
+                <img src="/gruppenfoto3.jpg" alt="Über uns Bild" class="about-image">
                 <div class="about-text">
-                    <h2>Über uns</h2>
-                    <p>Der AVRUPA BALYANLILAR KÜLTÜR ve DAYANIŞMA DERNEĞI wurde gegründet, um die kulturelle Vielfalt zu fördern und eine Brücke zwischen verschiedenen Kulturen zu bauen. Unser Ziel ist es, ein Ort der Begegnung, des Austauschs und der Gemeinschaft zu sein.</p>
-                    <p>Wir organisieren regelmäßig kulturelle Veranstaltungen, bieten Sprachkurse an und unterstützen die Integration durch verschiedene Projekte. Unser Kulturzentrum steht allen Menschen offen, die Interesse an kulturellem Austausch haben.</p>
-                    <p>Werden Sie Teil unserer Gemeinschaft und entdecken Sie die vielfältigen Angebote unseres Kulturzentrums.</p>
+                    <h2 data-i18n="about.heading"></h2>
+                    <p data-i18n="about.p1"></p>
+                    <p data-i18n="about.p2"></p>
+                    <p data-i18n="about.p3"></p>
                 </div>
             </div>
         </div>
@@ -1081,43 +1218,70 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>Über uns</h3>
-                    <p>AVRUPA BALYANLILAR KÜLTÜR ve DAYANIŞMA DERNEĞI fördert kulturellen Austausch und Gemeinschaft in Europa.</p>
+                    <h3 data-i18n="footer.about"></h3>
+                    <p data-i18n="footer.description"></p>
                     <div class="social-icons">
-                        <a href="#" class="social-icon">f</a>
-                        <a href="#" class="social-icon">i</a>
-                        <a href="#" class="social-icon">y</a>
-                    </div>
+                        <a
+                          href="https://www.facebook.com/profile.php?id=100074752431747"
+                          class="social-icon facebook"
+                          aria-label="Facebook"
+                          target="_blank"
+                        >
+                          <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a
+                          href="https://www.instagram.com/balyan_dernegi/"
+                          class="social-icon instagram"
+                          aria-label="Instagram"
+                          target="_blank"
+                        >
+                          <i class="fab fa-instagram"></i>
+                        </a>
+                      </div>
+                      
                 </div>
                 
                 <div class="footer-section" id="contact">
-                    <h3>Kontakt</h3>
+                    <h3 data-i18n="footer.contact"></h3>
                     <div class="contact-info">
                         <div class="contact-item">
                             <div class="contact-icon">📍</div>
-                            <div>Musterstraße 123, 50123 Köln</div>
+                            <div data-i18n="footer.address"></div>
                         </div>
                         <div class="contact-item">
                             <div class="contact-icon">📱</div>
-                            <div>+49 15566 605929</div>
+                            <div data-i18n="footer.phone"></div>
                         </div>
                         <div class="contact-item">
                             <div class="contact-icon">✉️</div>
-                            <div>balyanl@outlook.com</div>
+                            <div data-i18n="footer.email"></div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="footer-section">
-                    <h3>Öffnungszeiten</h3>
-                    <p>Montag - Freitag: 10:00 - 18:00 Uhr</p>
-                    <p>Samstag: 10:00 - 14:00 Uhr</p>
-                    <p>Sonntag: Geschlossen</p>
-                </div>
-            </div>
+                <!--<div class="footer-section">
+                    <h3 data-i18n="footer.hours"></h3>
+                    <p data-i18n="footer.hours.weekdays"></p>
+                    <p data-i18n="footer.hours.saturday"></p>
+                    <p data-i18n="footer.hours.sunday"></p>
+                </div>-->
+                 </div>
+
+                 
+                <footer class="footer-legal">
+                    <div class="legal-buttons">
+                      <a href="/impressum" class="legal-button">Impressum</a>
+                      <a href="/datenschutz" class="legal-button">Datenschutzerklärung</a>
+                      <a href="/cookies" class="legal-button">Cookie-Richtlinie</a>
+                      <!-- Wenn es tatsächlich keine Öffnungszeiten gibt, kann das so stehen bleiben: -->
+                      <span class="opening-hours">Öffnungszeiten: keine</span>
+                    </div>
+                  </footer>
+                  
+           
             
             <div class="footer-bottom">
-                <p>© 2025 AVRUPA BALYANLILAR KÜLTÜR ve DAYANIŞMA DERNEĞI | Eingetragen beim Amtsgericht Köln im Vereinsregister: 16431</p>
+                <p data-i18n="footer.copy"></p>
             </div>
         </div>
     </footer>

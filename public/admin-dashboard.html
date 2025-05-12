@@ -81,6 +81,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/js/translations.js"></script>
+    <script src="/js/i18n.js" defer></script>
     <style>
         :root {
             --primary: #3498db;
@@ -96,6 +98,9 @@
             --border-radius: 8px;
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s ease;
+            --third: #e67e22;
+            --third-dark: #d35400;
+            --index-dark: #1C2A44;
         }
 
         * {
@@ -111,18 +116,47 @@
             line-height: 1.6;
         }
 
-        /* Header styles */
-        .header {
-            background-color: white;
-            box-shadow: var(--shadow);
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+  /* Language Switcher nun kompakter in der Header-Leiste */
+.lang-switcher {
+  display: flex;
+  gap: 0.5rem;
+}
+.lang-switcher button {
+  background: var(--third);
+  color: var(--light);
+  border: 1px solid var(--third-dark);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition:  var(--transition), color var(--transition);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.lang-switcher button.active,
+.lang-switcher button:hover:not(.active) {
+  background: var(--third-dark);
+  color: white;
+  border-color: var(--third-dark);
+}
+
+    .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  background: white;
+  box-shadow: var(--shadow);
+  z-index: 100;
+}
+/* Wrapper für rechts angeordnetes Element */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 
         .header h1 {
             color: var(--primary);
@@ -557,31 +591,42 @@
     </style>
 </head>
 <body>
+
+
     <div class="header">
-        <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
-        <button id="logout-btn" class="logout-btn">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
+        <h1 data-i18n="admin.dashboard_title">
+            <i class="fas fa-tachometer-alt"></i> 
+          </h1>
+          <div class="header-right">
+            <div class="lang-switcher">
+              <button id="btn-de" data-lang="de" class="active">DE</button>
+              <button id="btn-tr" data-lang="tr">TR</button>
+            </div>
+        
+            <button id="logout-btn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> <span data-i18n="admin.logout"></span>
+              </button>
+    </div>
     </div>
 
     <div class="container">
         <div class="tabs">
-            <div class="tab active" data-tab="create">Erstellen / Bearbeiten</div>
-            <div class="tab" data-tab="news">News</div>
-            <div class="tab" data-tab="events">Veranstaltungen</div>
+            <div class="tab active" data-tab="create" data-i18n="admin.tab.create"></div>
+            <div class="tab" data-tab="news" data-i18n="admin.tab.news"></div>
+            <div class="tab" data-tab="events" data-i18n="admin.tab.events"></div>
         </div>
 
         <!-- Create/Edit Section -->
         <div class="content-section active" id="create-section">
             <div class="form-card">
-                <h2 class="form-title"><i class="fas fa-edit"></i> Inhalt erstellen oder bearbeiten</h2>
+                <h2 class="form-title" ><i class="fas fa-edit"></i><span data-i18n="admin.form_title"></span> </h2>
                 
                 <div class="type-selector">
                     <div class="type-option active" data-type="news">
-                        <i class="far fa-newspaper"></i> News
+                        <i class="far fa-newspaper"></i> <span data-i18n="admin.type.news"></span>
                     </div>
                     <div class="type-option" data-type="event">
-                        <i class="far fa-calendar-alt"></i> Veranstaltung
+                        <i class="far fa-calendar-alt"></i> <span data-i18n="admin.type.event"></span>
                     </div>
                 </div>
                 
@@ -590,36 +635,36 @@
                     <input type="hidden" id="entry-type" value="news">
                     
                     <div class="form-group">
-                        <label for="title"><i class="fas fa-heading"></i> Titel</label>
+                        <label for="title"><i class="fas fa-heading"></i> <span data-i18n="admin.label.title"></span></label>
                         <input type="text" id="title" class="form-control" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="content"><i class="fas fa-align-left"></i> Inhalt</label>
+                        <label for="content"><i class="fas fa-align-left"></i> <span data-i18n="admin.label.content"></span></label>
                         <textarea id="content" class="form-control" required></textarea>
                     </div>
                     
                     <!-- Event-specific fields -->
                     <div id="event-fields" style="display: none;">
                         <div class="form-group">
-                            <label for="event-date"><i class="far fa-calendar"></i> Datum</label>
+                            <label for="event-date"><i class="far fa-calendar"></i> <span data-i18n="admin.label.date"></span></label>
                             <input type="date" id="event-date" class="form-control">
                         </div>
                         
                         <div class="form-group">
-                            <label for="event-time"><i class="far fa-clock"></i> Uhrzeit</label>
+                            <label for="event-time"><i class="far fa-clock"></i> <span data-i18n="admin.label.time"></span></label>
                             <input type="time" id="event-time" class="form-control">
                         </div>
                         
                         <div class="form-group">
-                            <label for="event-location"><i class="fas fa-map-marker-alt"></i> Ort</label>
+                            <label for="event-location"><i class="fas fa-map-marker-alt"></i> <span data-i18n="admin.label.location"></span></label>
                             <input type="text" id="event-location" class="form-control">
                         </div>
                     </div>
                     
                     <!-- Existing media -->
                     <div class="form-group">
-                        <label><i class="fas fa-photo-video"></i> Vorhandene Medien</label>
+                        <label><i class="fas fa-photo-video"></i> <span data-i18n="admin.label.existing_media"></span></label>
                         <div id="existing-media" class="existing-media">
                             <!-- Dynamic content -->
                         </div>
@@ -627,21 +672,21 @@
                     
                     <!-- Media uploader -->
                     <div class="form-group">
-                        <label for="media">Medien hochladen</label>
+                        <label for="media"><span data-i18n="admin.label.upload_media"></span></label>
                         <div class="media-uploader" id="media-uploader">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Bilder oder Videos hier ablegen oder klicken zum Auswählen</p>
-                            <small>Unterstützte Formate: JPG, PNG, GIF, MP4, WEBM, OGG, MKV</small>
+                            <p data-i18n="admin.upload.instructions"></p>
+                            <small><span data-i18n="admin.upload.formats"></span></small>
                             <input type="file" id="media" name="media" multiple accept=".png,.jpg,.jpeg,.gif,.mp4,.webm,.ogg,.mkv">
                         </div>
                     </div>
                     
                     <div class="btn-group">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Speichern
+                            <i class="fas fa-save"></i> <span data-i18n="admin.button.save"></span>
                         </button>
                         <button type="button" id="cancel-edit-btn" class="btn btn-secondary" style="display:none;">
-                            <i class="fas fa-times"></i> Abbrechen
+                            <i class="fas fa-times"></i><span data-i18n="admin.button.cancel"></span>
                         </button>
                     </div>
                 </form>
@@ -651,7 +696,7 @@
         <!-- News Section -->
         <div class="content-section" id="news-section">
             <div class="form-card">
-                <h2 class="form-title"><i class="far fa-newspaper"></i> Bestehende News</h2>
+                <h2 class="form-title"><i class="far fa-newspaper"></i> <span data-i18n="admin.section.news"></span></h2>
                 <div id="news-list" class="items-list">
                     <!-- Dynamic content -->
                 </div>
@@ -661,15 +706,40 @@
         <!-- Events Section -->
         <div class="content-section" id="events-section">
             <div class="form-card">
-                <h2 class="form-title"><i class="far fa-calendar-alt"></i> Bestehende Veranstaltungen</h2>
+                <h2 class="form-title"><i class="far fa-calendar-alt"></i> <span data-i18n="admin.section.events"></span></h2>
                 <div id="events-list" class="items-list">
                     <!-- Dynamic content -->
                 </div>
             </div>
         </div>
-    </div>
+   
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="js/admin.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          // Language-Switcher
+          const btns = document.querySelectorAll(".lang-switcher button");
+          btns.forEach(btn => {
+            btn.addEventListener("click", () => {
+              const lang = btn.dataset.lang;
+              if (typeof setLanguage === "function") setLanguage(lang);
+              btns.forEach(b => b.classList.toggle("active", b === btn));
+            });
+          });
+          // Initiale Übersetzung
+          document.dispatchEvent(new Event("i18n:translate"));
+    
+          // Tab-Wechsel
+          const tabs = document.querySelectorAll(".tab"),
+                sections = document.querySelectorAll(".content-section");
+          tabs.forEach(t => t.addEventListener("click", () => {
+            tabs.forEach(x => x.classList.remove("active"));
+            sections.forEach(s => s.classList.remove("active"));
+            t.classList.add("active");
+            document.getElementById(t.dataset.tab + "-section").classList.add("active");
+          }));
+        });
+      </script>
 </body>
 </html>

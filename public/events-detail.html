@@ -5,7 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Event Details</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="/css/fontawesome/css/all.min.css">
+  <script src="/js/translations.js"></script>
+  <script src="/js/i18n.js" defer></script>
   <style>
+    /* global reset + Standard-Schrift */
+/* global reset + Standard-Schrift wie in Index.html */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Farbvariablen */
+:root {
+  --primary: #1C2A44;
+  --secondary: #e67e22;
+  --light: #f5f5f5;
+  --dark: #333;
+  --accent: #e67e22;
+}
+
+/* Container für zentrierten Inhalt */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+h1 {
+  
+  white-space: normal;         /* erlaubt Zeilenumbrüche */
+  overflow-wrap: break-word;   /* lange Wörter werden umgebrochen */
+  word-break: break-word;      /* Fallback für alte Browser */
+
+}
+.event-meta {
+      font-size: 0.9rem;
+      color: #666;
+      padding: 0 15px 15px;
+      line-height: 1.5;
+    }
+
+    .event-meta i {
+      margin-right: 5px;
+      color: var(--secondary);
+    }
+
     .event-detail-container {
       max-width: 800px;
       margin: 50px auto;
@@ -45,10 +91,79 @@
       margin-bottom: 10px;
       font-size: 0.9rem;
     }
+    /* Language Switcher */
+.lang-switcher {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    background: rgba(255,255,255,0.9);
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 5px;
+    z-index: 10002;
+    display: flex;
+    gap: 5px;
+}
+
+.lang-switcher button {
+    background: var(--secondary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.lang-switcher button:hover,
+.lang-switcher button.active {
+    background: var(--primary);
+}
+.overlay-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  font-size: 2rem;
+  color: white;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 10051;   /* noch eine Schippe höher */
+}
+
+.overlay-close:hover {
+  
+  padding: 10px 20px;
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+/* Hinweisleiste unten */
+.overlay-hint {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 1rem;
+  background: rgba(0,0,0,0.5);
+  padding: 6px 12px;
+  border-radius: 5px;
+  z-index: 10001;
+}
+
+
+
   </style>
 </head>
 <body>
-
+  <div class="lang-switcher">
+    <button id="btn-de">DE</button>
+    <button id="btn-tr">TR</button>
+  </div>
   <div class="event-detail-container" id="event-detail">
     <p>Lade Event...</p>
   </div>
@@ -79,19 +194,90 @@
         document.getElementById("event-detail").innerHTML = `
           <h1>${event.title}</h1>
           <div class="event-date">${event.date}${event.time ? " – " + event.time : ""}</div>
-          <p><strong>Ort:</strong> ${event.location}</p>
+          <p class="event-meta"><i class="fas fa-map-marker-alt"></i> ${event.location}</p>
           <div>${mediaHtml}</div>
           <p>${event.content}</p>
-          <small>Erstellt am: ${event.createdAt}${event.updatedAt && event.updatedAt !== event.createdAt ? " | Bearbeitet am: " + event.updatedAt : ""}</small>
+          <small>
+    <span data-i18n="created_at">Erstellt am</span>: ${event.createdAt}
+    ${
+      event.updatedAt && event.updatedAt !== event.createdAt
+        ? ` | <span data-i18n="updated_at">Bearbeitet am</span>: ${event.updatedAt}`
+        : ``
+    }
+  </small>
+         <!-- <small>Erstellt am: ${event.createdAt}${event.updatedAt && event.updatedAt !== event.createdAt ? " | Bearbeitet am: " + event.updatedAt : ""}</small>-->
           <br><br>
-          <a href="index.html" class="back-link">← Zur Startseite</a><br>
-          <a href="gallery.html" class="back-link">← Zur Galerie</a>
+          <a href="index.html" class="back-link" data-i18n="to_home">← Zur Startseite</a><br>
+          <a href="gallery.html" class="back-link"  data-i18n="back_to_gallery">← Zu Fotos/Videos</a>
         `;
       } catch (error) {
         console.error(error);
         document.getElementById("event-detail").innerHTML = "<p>Fehler beim Laden des Events.</p>";
       }
     }
+
+    document.addEventListener("click", function(e) {
+  if ((e.target.tagName === "IMG" || e.target.tagName === "VIDEO") 
+      && !e.target.classList.contains("no-zoom")) {
+
+    // Overlay-Grundstruktur
+    const overlay = document.createElement("div");
+    Object.assign(overlay.style, {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      background: "rgba(0,0,0,0.8)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex:  10050,
+      cursor: "zoom-out"
+    });
+
+    // Bild oder Video klonen
+    let clone;
+    if (e.target.tagName === "IMG") {
+      clone = document.createElement("img");
+      clone.src = e.target.src;
+    } else {
+      clone = document.createElement("video");
+      clone.src = e.target.src;
+      clone.controls = true;
+      clone.autoplay = true;
+    }
+    Object.assign(clone.style, {
+      maxWidth: "90%",
+      maxHeight: "90%",
+      borderRadius: "8px"
+    });
+    overlay.appendChild(clone);
+
+    // Close-Button
+    const btnClose = document.createElement("button");
+    btnClose.innerHTML = '<i class="fas fa-times"></i>';
+    btnClose.className = "overlay-close";
+    overlay.appendChild(btnClose);
+    btnClose.addEventListener("click", () => document.body.removeChild(overlay));
+
+    /* Hinweisleiste
+    const hint = document.createElement("div");
+    hint.className = "overlay-hint";
+    hint.textContent = "Klick irgendwo zum Schließen";
+    overlay.appendChild(hint);*/
+
+    // Overlay in den Body
+    document.body.appendChild(overlay);
+
+    // Klick auf Hintergrund schließt auch
+    overlay.addEventListener("click", e2 => {
+      if (e2.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    });
+  }
+});
 
     fetchEventDetail();
   </script>

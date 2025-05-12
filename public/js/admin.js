@@ -2741,7 +2741,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     const previewVideo = document.createElement('video');
                     previewVideo.controls = true;
-                    previewVideo.autoplay = true;
+                    previewVideo.autoplay = false;
                     previewVideo.playsInline = true;
                     previewVideo.style.maxWidth = '90%';
                     previewVideo.style.maxHeight = '80%';
@@ -3082,7 +3082,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 video.volume = 0;             
                 video.playsInline = true;
                 
-                // Autoplay nur wenn sichtbar
+           /*     // Autoplay nur wenn sichtbar
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
@@ -3092,7 +3092,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                 });
-                observer.observe(video);
+                observer.observe(video);*/
                 
                 card.appendChild(video);
             } else {
@@ -3168,7 +3168,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-primary btn-small';
-        editBtn.innerHTML = '<i class="fas fa-edit"></i> Bearbeiten';
+        editBtn.innerHTML = `
+  <i class="fas fa-edit"></i>
+  <span data-i18n="content_edit">Bearbeiten</span>
+`;
         // FIX 2: Stoppt die Eventpropagation, so dass das Klick-Event nicht zum Card-Element gelangt
         editBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // Verhindert, dass das Klick-Event zum Card-Element gelangt
@@ -3182,7 +3185,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger btn-small';
-        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Löschen';
+        deleteBtn.innerHTML = `
+  <i class="fas fa-trash-alt"></i>
+  <span data-i18n="content_delete">Löschen</span>
+`;
         // FIX 2: Stoppt die Eventpropagation, so dass das Klick-Event nicht zum Card-Element gelangt
         deleteBtn.addEventListener('click', (e) => {
             e.stopPropagation(); // Verhindert, dass das Klick-Event zum Card-Element gelangt

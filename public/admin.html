@@ -1,19 +1,124 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="admin.login_title">Admin Login</title>
+  <style>
+    /* Basis-Farben wie auf deinen anderen Seiten */
+    :root {
+      --primary: #e67e22;
+      --secondary: #1C2A44;
+      --light: #f5f5f5;
+      --dark: #333;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--light);
+      font-family: Arial, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 1rem; color: var(--dark);
+    }
+
+    .login-container {
+      width: 100%; max-width: 400px;
+      background: #fff; padding: 2rem;
+      border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Language-Switcher */
+    .lang-switcher {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .lang-switcher button {
+      background: var(--light);
+      color: var(--dark);
+      border: 1px solid var(--secondary);
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+    .lang-switcher button.active,
+    .lang-switcher button:hover:not(.active) {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+    form { display: flex; flex-direction: column; gap: 0.75rem; }
+    label { font-size: 0.9rem; }
+    input {
+      width: 100%; padding: 0.75rem; font-size: 1rem;
+      border: 1px solid #ccc; border-radius: 4px;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: var(--primary); outline: none; }
+
+    button[type="submit"] {
+      margin-top: 1rem; padding: 0.75rem; font-size: 1rem;
+      border: none; border-radius: 4px;
+      background-color: var(--secondary); color: white;
+      cursor: pointer; transition: background-color 0.2s;
+    }
+    button[type="submit"]:hover {
+      background-color: #cf6a12;
+    }
+
+    @media (max-width: 480px) {
+      .login-container { padding: 1.5rem; }
+      h1 { font-size: 1.25rem; }
+      input, button { font-size: 0.9rem; padding: 0.6rem; }
+    }
+  </style>
 </head>
 <body>
-    <h1>Admin Login</h1>
+
+  <div class="login-container">
+    <!-- language switcher -->
+    <div class="lang-switcher">
+      <button id="btn-de" data-lang="de" class="active">DE</button>
+      <button id="btn-tr" data-lang="tr">TR</button>
+    </div>
+
+    <h1 data-i18n="admin.login_title">Admin Login</h1>
     <form action="/admin-login" method="POST">
-        <label for="username">Benutzername:</label>
-        <input type="text" name="username" id="username" required>
-        <label for="password">Passwort:</label>
-        <input type="password" name="password" id="password" required>
-        <button type="submit">Login</button>
-      </form>
-      
+      <label for="username" data-i18n="admin.username">Benutzername:</label>
+      <input type="text" name="username" id="username" required>
+
+      <label for="password" data-i18n="admin.password">Passwort:</label>
+      <input type="password" name="password" id="password" required>
+
+      <button type="submit" data-i18n="admin.login_button">Login</button>
+    </form>
+  </div>
+
+  <script src="/js/translations.js"></script>
+  <script src="/js/i18n.js" defer></script>
+  <script>
+    // sobald i18n geladen ist, setze aktuellen Button
+    document.addEventListener("DOMContentLoaded", () => {
+      const btns = document.querySelectorAll(".lang-switcher button");
+      btns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const lang = btn.dataset.lang;
+          // Sprache umschalten
+          if (typeof setLanguage === "function") setLanguage(lang);
+          // Active-State verwalten
+          btns.forEach(b => b.classList.toggle("active", b === btn));
+        });
+      });
+      // initial übersetzen
+      document.dispatchEvent(new Event("i18n:translate"));
+    });
+  </script>
 </body>
 </html>

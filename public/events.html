@@ -6,22 +6,176 @@
   <title>Alle Veranstaltungen</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="/css/fontawesome/css/all.min.css">
+  <script src="/js/translations.js"></script>
+  <script src="/js/i18n.js" defer></script>
   <style>
-    :root {
-      --primary: #1C2A44;
-      --secondary: #e67e22;
-      --light: #f4f4f4;
+    /* global reset + Standard-Schrift wie in Index.html */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Farbvariablen */
+:root {
+  --primary: #1C2A44;
+  --secondary: #e67e22;
+  --light: #f5f5f5;
+  --dark: #333;
+  --accent: #e67e22;
+}
+
+/* Container für zentrierten Inhalt */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+/* Header-Styling */
+header {
+  background-color: var(--primary);
+  color: white;
+  padding: 10px 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 1000;
+}
+
+.logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.logo {
+  height: 100px;
+  margin-top: -3px;
+}
+
+.site-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: white;
+  margin-top: 5px;
+}
+
+.navigation {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.navigation a {
+  color: white;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
+}
+.navigation a:hover {
+  background-color: rgba(255,255,255,0.1);
+  color: var(--secondary);
+}
+.navigation a.active {
+  background-color: var(--secondary);
+}
+/*
+.header-menu-toggle {
+  display: none;
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 10px 20px;
+  font-weight: bold;
+  border-radius: 25px;
+  margin: 30px auto 10px;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: 0.3s ease, box-shadow 0.3s ease;
+}
+.header-menu-toggle:hover {
+  background-color: rgba(255,255,255,0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}*/
+
+/* Language Switcher */
+.lang-switcher {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 5px;
+  z-index: 10002;
+  display: flex;
+  gap: 5px;
+}
+.lang-switcher button {
+  background: var(--secondary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+.lang-switcher button:hover,
+.lang-switcher button.active {
+  background: var(--primary);
+}
+
+/* Mobile Breakpoint */
+@media (max-width: 768px) {
+  .navigation {
+    display: none;
+    flex-direction: column;
+    background-color: var(--primary);
+    padding: 10px 0;
+  }
+  .navigation.show {
+    display: flex;
+  }
+  .navigation a {
+    width: 100%;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 10px;
+  }
+  .navigation a:first-child {
+    border-top: none;
+  }
+  .nav-toggle {
+        display: block;
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: white;
+        z-index: 1001;
     }
+
+}
+
+
 
     body {
       background-color: var(--light);
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
+     
       color: #333;
     }
 
-    header {
+ /**   header {
       background-color: var(--primary);
       color: white;
       padding: 20px;
@@ -30,7 +184,7 @@
 
     h1 {
       margin: 0;
-    }
+    }*/
 
     main {
       padding: 40px 20px;
@@ -101,7 +255,7 @@
     }
 
     .details-bar {
-      background-color: var(--secondary);
+      background-color: var(--primary);
       color: white;
       text-align: center;
       padding: 10px 0;
@@ -127,18 +281,313 @@
       background-color: #cf6a12;
       transform: translateY(-2px);
     }
+
+     /* global reset + Standard-Schrift wie in Index.html */
+     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    :root { --primary:#1C2A44; --secondary:#e67e22; --light:#f5f5f5; --dark:#333; --accent:#e67e22; }
+    .container { max-width:1200px; margin:0 auto; padding:0 20px; }
+    header { background:var(--primary); color:white; padding:10px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); position:relative; z-index:1000; }
+    .logo-container { display:flex; flex-direction:column; align-items:center; }
+    .logo { height:100px; margin-top:-3px; }
+    .site-title { font-size:1.3rem; font-weight:600; color:white; margin-top:5px; }
+    .navigation { display:flex; justify-content:center; gap:20px; margin-top:15px; }
+    .navigation a { color:white; text-decoration:none; padding:5px 10px; border-radius:4px; transition:background 0.3s,color 0.3s; }
+    .navigation a:hover { background:rgba(255,255,255,0.1); color:var(--secondary); }
+    .navigation a.active { background:var(--secondary); }
+    /* Language Switcher … */
+    .lang-switcher { position:fixed; top:15px; right:20px; background:rgba(255,255,255,0.9); border:1px solid #ddd; border-radius:5px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:5px; z-index:10002; display:flex; gap:5px; }
+    .lang-switcher button { background:var(--secondary); color:white; border:none; border-radius:4px; padding:5px 10px; cursor:pointer; font-weight:bold; transition:0.3s; }
+    .lang-switcher button:hover, .lang-switcher button.active { background:var(--primary); }
+
+    body { background:var(--light); color:#333; }
+    main { padding:40px 20px; }
+
+    /* Grid für Events */
+    .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; max-width:1200px; margin:0 auto; }
+    .gallery-item { background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1); overflow:hidden; display:flex; flex-direction:column; text-align:center; transition:transform 0.2s ease; position:relative; }
+    .gallery-item:hover { transform:translateY(-3px); }
+    .gallery-item img, .gallery-item video { width:100%; height:200px; object-fit:cover; cursor:zoom-in; }
+    .gallery-link { color:var(--primary); text-decoration:none; display:block; flex-grow:1; }
+    .media-title { padding:15px 15px 5px; font-weight:bold; color:var(--primary); font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .event-meta { font-size:0.9rem; color:#666; padding:0 15px 15px; line-height:1.5; }
+    .event-meta i { margin-right:5px; color:var(--secondary); }
+    .details-bar { background:var(--primary); color:white; text-align:center; padding:10px 0; font-weight:bold; font-size:0.95rem; margin-top:auto; }
+    .details-bar:hover { background:#d35400; }
+    .back-link { display:inline-block; margin:40px auto 0; background:var(--secondary); color:white; padding:12px 24px; font-weight:bold; text-decoration:none; border-radius:8px; box-shadow:0 3px 6px rgba(0,0,0,0.2); transition:background 0.3s,transform 0.2s; }
+    .back-link:hover { background:#cf6a12; transform:translateY(-2px); }
+
+    /* ================ Pagination ================ */
+    .pagination { text-align:center; margin:20px 0; }
+    .pagination button {
+      background:var(--light); border:1px solid var(--primary);
+      color:var(--primary); margin:0 4px; padding:6px 12px;
+      border-radius:4px; cursor:pointer; transition:0.3s,color 0.3s;
+    }
+    .pagination button.active { background:var(--primary); color:white; }
+    .pagination button:disabled { opacity:0.5; cursor:default; }
+
+    /* ================ Lightbox ================ */
+    .lightbox-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.85);
+      display:flex; align-items:center; justify-content:center; z-index:10050;
+    }
+    .lightbox-close {
+      position:absolute; top:20px; right:20px; background:transparent;
+      border:none; color:white; font-size:2.5rem; cursor:pointer; z-index:10051; outline:none;
+    }
+    .lightbox-content {
+      max-width:90%; max-height:90%; border-radius:8px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    /* ================ Tipp-Box ================ */
+    .gallery-tip {
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:rgba(28,42,68,0.9); color:white; padding:10px 15px;
+      border-radius:8px; font-size:14px; z-index:10000;
+      box-shadow:0 3px 10px rgba(0,0,0,0.3); text-align:center;
+    }
+    .gallery-tip button.gallery-tip-close {
+      background:var(--secondary); border:none; color:white;
+      padding:3px 8px; margin-left:10px; border-radius:4px; cursor:pointer;
+    }
+    .event-time {
+  margin-left: 8px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+
+.header-menu-toggle {
+  display: none;
+  background-color: rgba(255, 255, 255, 0.1); /* leicht transparent */
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3); /* dezente Umrandung */
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 25px;
+  margin: 10px auto;
+  cursor: pointer;
+  backdrop-filter: blur(2px); /* subtile Wirkung */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: 0.3s ease, box-shadow 0.3s ease;
+  margin-top: 30px;
+}
+.header-menu-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 768px) {
+  .header-menu-toggle {
+    display: block;
+  }
+ }
+
   </style>
 </head>
 <body>
-  <header>
-    <h1>Alle Veranstaltungen</h1>
-  </header>
-  <main>
-    <div id="all-events-list" class="gallery-grid"></div>
-    <div style="text-align: center;">
-      <a href="index.html" class="back-link">Zurück zur Startseite</a>
-    </div>
-  </main>
+    <!-- Language Switcher (optional) -->
+<div class="lang-switcher">
+  <button id="btn-de">DE</button>
+  <button id="btn-tr">TR</button>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="container">
+      <div class="logo-container">
+          <a href="index.html">
+              <img src="/logo2.png" alt="Logo" class="logo no-zoom">
+          </a>
+          <div class="site-title" data-i18n="site.title"></div>
+      </div>
+      <button class="header-menu-toggle" id="headerMenuToggle" data-i18n="header.menu"></button>
+
+      <nav class="navigation" id="mainNav">
+        <a href="index.html" data-i18n="nav.home"></a>
+          <a href="news.html" data-i18n="nav.news"></a>
+      
+          <a href="gallery.html" data-i18n="nav.gallery"></a>
+     <!--     <a href="#about" data-i18n="nav.about"></a>
+          <a href="#contact" data-i18n="nav.contact"></a>-->
+      </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Grid -->
+  <div id="all-events-list" class="gallery-grid"></div>
+  <!-- Pagination -->
+  <div id="pagination" class="pagination"></div>
+  <!-- Back-Link -->
+  <div style="text-align:center;">
+    <a href="index.html" class="back-link" data-i18n="main.back_to_home"></a>
+  </div>
+</main>
+
+<script>
+  const ITEMS_PER_PAGE = 12;
+  let allEvents = [];
+  let currentPage = 1;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    setupTipBox();
+    fetchAllEvents();
+  });
+
+  function setupTipBox() {
+    const isTouch =
+      "ontouchstart" in window ||
+      navigator.maxTouchPoints > 0 ||
+      navigator.msMaxTouchPoints > 0;
+
+    const tip = document.createElement("div");
+    tip.className = "gallery-tip";
+    tip.innerHTML = `
+      <span data-i18n="${isTouch ? "gallery.tip.touch" : "gallery.tip.click"}"></span>
+      <button class="gallery-tip-close" data-i18n="gallery.tip.ok"></button>
+    `;
+    document.body.appendChild(tip);
+
+    tip.querySelector(".gallery-tip-close").addEventListener("click", () => {
+      document.body.removeChild(tip);
+    });
+
+    // sofort übersetzen
+    if (typeof setLanguage === "function" && window.currentLang) {
+      setLanguage(window.currentLang);
+    } else {
+      document.dispatchEvent(new Event("i18n:translate"));
+    }
+  }
+
+  async function fetchAllEvents() {
+    try {
+      const res = await fetch("/events");
+      if (!res.ok) throw new Error("Fehler beim Abrufen der Veranstaltungen");
+      const events = await res.json();
+      allEvents = events.sort((a,b) => b.id - a.id);
+
+      renderPage();
+      renderPagination();
+      attachLightbox();
+    } catch(err) {
+      console.error(err);
+    }
+  }
+
+  function renderPage() {
+    const container = document.getElementById("all-events-list");
+    container.innerHTML = "";
+    const start = (currentPage-1)*ITEMS_PER_PAGE;
+    const slice = allEvents.slice(start, start+ITEMS_PER_PAGE);
+
+    slice.forEach(ev => {
+      let media = "";
+      if (ev.media?.length) {
+        const url = ev.media[0];
+        const video = /\.(mp4|webm|ogg|mkv)$/i.test(url);
+        media = video
+          ? `<video src="${url}" muted playsinline></video>`
+          : `<img src="${url}" alt="Bild">`;
+      }
+      const card = document.createElement("div");
+      card.className = "gallery-item";
+      card.innerHTML = `
+        <a href="events-detail.html?id=${ev.id}" class="gallery-link">
+          ${media}
+          <div class="media-title" title="${ev.title}">${ev.title}</div>
+          <div class="event-meta">
+           <div>
+  <i class="fas fa-calendar-alt"></i> ${ev.date}
+  ${ev.time
+    ? `<span class="event-time"><i class="fas fa-clock"></i> ${ev.time}</span>`
+    : ""
+  }
+</div>
+
+            <div><i class="fas fa-map-marker-alt"></i> ${ev.location}</div>
+          </div>
+          <div class="details-bar" data-i18n="read_more">Details anzeigen <i class="fas fa-arrow-right"></i></div>
+        </a>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function renderPagination() {
+    const p = document.getElementById("pagination");
+    p.innerHTML = "";
+    const total = Math.ceil(allEvents.length/ITEMS_PER_PAGE);
+    if(total<=1) return;
+
+    const prev = document.createElement("button");
+    prev.innerHTML = `&laquo; <span data-i18n="pagination.prev">Zurück</span>`;
+    prev.disabled = currentPage===1;
+    prev.addEventListener("click",()=>{
+      currentPage--; renderPage(); renderPagination(); attachLightbox();
+    });
+    p.appendChild(prev);
+
+    for(let i=1;i<=total;i++){
+      const btn=document.createElement("button");
+      btn.textContent=i;
+      if(i===currentPage) btn.classList.add("active");
+      btn.addEventListener("click",()=>{
+        currentPage=i; renderPage(); renderPagination(); attachLightbox();
+      });
+      p.appendChild(btn);
+    }
+
+    const next = document.createElement("button");
+    next.innerHTML = `<span data-i18n="pagination.next">Weiter</span> &raquo;`;
+    next.disabled = currentPage===total;
+    next.addEventListener("click",()=>{
+      currentPage++; renderPage(); renderPagination(); attachLightbox();
+    });
+    p.appendChild(next);
+  }
+
+  function attachLightbox() {
+    document.querySelectorAll("#all-events-list img, #all-events-list video")
+      .forEach(el=>{
+        el.addEventListener("click",e=>{
+          e.preventDefault(); e.stopPropagation();
+          openLightbox(el.src, el.tagName.toLowerCase()==="video");
+        });
+      });
+  }
+
+  function openLightbox(url, isVideo) {
+    const overlay=document.createElement("div");
+    overlay.className="lightbox-overlay";
+
+    const btn=document.createElement("button");
+    btn.className="lightbox-close";
+    btn.innerHTML="&times;";
+    overlay.appendChild(btn);
+    btn.addEventListener("click",()=>document.body.removeChild(overlay));
+
+    const mediaEl = isVideo
+      ? Object.assign(document.createElement("video"),{ src:url, controls:true })
+      : Object.assign(document.createElement("img"),{ src:url });
+    mediaEl.className="lightbox-content";
+    overlay.appendChild(mediaEl);
+
+    overlay.addEventListener("click",e=>{
+      if(e.target===overlay) document.body.removeChild(overlay);
+    });
+
+    document.body.appendChild(overlay);
+  }
+
+
+
+</script>
+
+<!--
   <script>
     async function fetchAllEvents() {
       try {
@@ -180,6 +629,7 @@
       }
     }
     fetchAllEvents();
-  </script>
+  </script>-->
+
 </body>
 </html>

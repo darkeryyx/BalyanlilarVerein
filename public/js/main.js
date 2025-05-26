@@ -1,4 +1,213 @@
 async function fetchNews() {
+  try {
+      const response = await fetch("/news");
+      if (!response.ok) throw new Error("Fehler beim Abrufen der News");
+      const news = await response.json();
+      
+      // Sortiere neueste News oben
+      const sortedNews = news.sort((a, b) => b.id - a.id);
+      const limitedNews = sortedNews.slice(0, 4);
+      
+      const newsList = document.getElementById("news-list");
+      newsList.innerHTML = "";
+      
+      limitedNews.forEach(item => {
+          let mediaElements = '';
+          if (item.media && item.media.length > 0) {
+              const firstMedia = item.media[0];
+              const ext = firstMedia.split('.').pop().toLowerCase();
+              const isVideo = ['mp4','webm','ogg','mkv'].includes(ext);
+
+              if (isVideo) {
+                  // Versuche, eine MP4-Variante von Cloudinary zu erzwingen
+                  let mp4Url = null;
+                  if (/res\.cloudinary\.com/.test(firstMedia)) {
+                      // Insert f_mp4 nach "/upload/"
+                      mp4Url = firstMedia.replace(
+                        /\/upload\/(v\d+\/)?/, 
+                        (_match, version) => `/upload/f_mp4/${version||''}`
+                      );
+                  }
+
+                  const posterUrl = firstMedia.replace(/\.\w+$/, '.jpg');
+mediaElements = `
+  <video
+    controls
+    playsinline
+    webkit-playsinline
+    poster="${posterUrl}"
+    class="news-video"
+  >
+    ${ mp4Url
+         ? `<source src="${mp4Url}" type="video/mp4">`
+         : '' }
+    <source src="${firstMedia}" type="video/${ext}">
+    Dein Browser unterstützt keine HTML5-Videos.
+  </video>
+`;
+              } else {
+                  mediaElements = `<img src="${firstMedia}" alt="Bild" class="news-image">`;
+              }
+          }
+          
+          const card = document.createElement("div");
+          card.className = "news-card";
+          card.innerHTML = `
+              <div class="card-content">
+                <h3 class="news-title" title="${item.title}">${item.title}</h3>
+                <p>${item.content.length > 200 
+                      ? item.content.substring(0, 200) + "…" 
+                      : item.content}
+                </p>
+                <a href="news-detail.html?id=${item.id}" class="read-more">
+                  Mehr lesen <span>→</span>
+                </a>
+                ${mediaElements}
+              </div>
+              <div class="card-footer">
+                ${item.updatedAt && item.updatedAt !== item.createdAt 
+                  ? `<div class="modified">Bearbeitet am: ${item.updatedAt}</div>` 
+                  : ""}
+                <div class="created">Erstellt am: ${item.createdAt}</div>
+              </div>
+          `;
+          newsList.appendChild(card);
+      });
+      
+  } catch (error) {
+      console.error("Fehler beim Abrufen der News:", error);
+  }
+}
+
+
+async function fetchEvents() {
+  try {
+    const response = await fetch("/events");
+    if (!response.ok) throw new Error("Fehler beim Abrufen der Veranstaltungen");
+    const events = await response.json();
+
+    const sortedEvents = events.sort((a, b) => b.id - a.id);
+    const limitedEvents = sortedEvents.slice(0, 3);
+    const eventsGrid = document.querySelector(".events-grid");
+    eventsGrid.innerHTML = "";
+
+    limitedEvents.forEach(event => {
+      let mediaHtml = "";
+      if (event.media && event.media.length > 0) {
+          const firstMedia = event.media[0];
+          const ext = firstMedia.split('.').pop().toLowerCase();
+          const isVideo = ['mp4','webm','ogg','mkv'].includes(ext);
+
+          if (isVideo) {
+              let mp4Url = null;
+              if (/res\.cloudinary\.com/.test(firstMedia)) {
+                  mp4Url = firstMedia.replace(
+                    /\/upload\/(v\d+\/)?/, 
+                    (_match, version) => `/upload/f_mp4/${version||''}`
+                  );
+              }
+
+              const posterUrl = firstMedia.replace(/\.\w+$/, '.jpg');
+mediaHtml = `
+  <video
+    controls
+    playsinline
+    webkit-playsinline
+    poster="${posterUrl}"
+    class="event-media"
+  >
+    ${ mp4Url
+         ? `<source src="${mp4Url}" type="video/mp4">`
+         : '' }
+    <source src="${firstMedia}" type="video/${ext}">
+    Dein Browser unterstützt keine HTML5-Videos.
+  </video>
+`;
+          } else {
+              mediaHtml = `<img src="${firstMedia}" alt="Bild" class="event-media">`;
+          }
+      } else {
+        mediaHtml = `<img src="/logo2.png" alt="Standardbild" class="event-media">`;
+      }
+
+      const card = document.createElement("div");
+      card.className = "event-card";
+      card.innerHTML = `
+        <div class="event-card-media">
+          ${mediaHtml}
+        </div>
+        <div class="event-details">
+          <div class="card-content">
+            <span class="event-date">
+              ${event.date}${event.time ? ", " + event.time : ""}
+            </span>
+            <h3 class="event-title" title="${event.title}">
+              ${event.title}
+            </h3>
+            <p class="event-location">
+              <span><i class="fas fa-map-marker-alt"></i></span> ${event.location}
+            </p>
+            <p class="event-description">
+              ${event.content.length > 200 
+                ? event.content.substring(0, 200) + "…" 
+                : event.content}
+            </p>
+            <a href="events-detail.html?id=${event.id}" class="read-more">
+              Mehr lesen <span>→</span>
+            </a>
+          </div>
+          <div class="card-footer">
+            ${event.updatedAt && event.updatedAt !== event.createdAt 
+              ? `<div class="modified">Bearbeitet am: ${event.updatedAt}</div>` 
+              : ""}
+            <div class="created">Erstellt am: ${event.createdAt}</div>
+          </div>
+        </div>
+      `;
+      eventsGrid.appendChild(card);
+    });
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Veranstaltungen:", error);
+  }
+}
+
+document.addEventListener("click", function(e) {
+  // Nur Bilder (IMG) zoomen, Videos ignorieren
+  if (e.target.tagName !== "IMG" || e.target.classList.contains("no-zoom")) {
+    return;
+  }
+
+  // Overlay erstellen
+  const overlay = document.createElement("div");
+  Object.assign(overlay.style, {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100vw",
+    height: "100vh",
+    background: "rgba(0,0,0,0.8)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+    cursor: "zoom-out"
+  });
+
+  // Bild klonen
+  const clone = e.target.cloneNode();
+  clone.style.maxWidth = "90%";
+  clone.style.maxHeight = "90%";
+
+  overlay.appendChild(clone);
+  document.body.appendChild(overlay);
+
+  // Klick auf Overlay schließt Lightbox
+  overlay.addEventListener("click", () => {
+    document.body.removeChild(overlay);
+  });
+});
+
+/*async function fetchNews() {
     try {
         const response = await fetch("/news");
         if (!response.ok) throw new Error("Fehler beim Abrufen der News");
@@ -136,6 +345,7 @@ document.addEventListener("click", function(e) {
         overlay.addEventListener("click", () => document.body.removeChild(overlay));
     }
 });
+*/
 document.addEventListener("DOMContentLoaded", function () {
     if (window.innerWidth <= 768) {
       const mainContent = document.querySelector(".main-content");

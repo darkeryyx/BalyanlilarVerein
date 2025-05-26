@@ -457,7 +457,7 @@ header {
   </div>
 </main>
 <script>
-    // Tipp-Box ins Dokument einfügen
+  /*  // Tipp-Box ins Dokument einfügen
     function setupNewsTipBox() {
     const isTouch =
       'ontouchstart' in window ||
@@ -628,8 +628,8 @@ header {
   });
 
 
-
-   /* async function fetchAllNews() {
+//das war schon auskommentiert und ist nicht mehr notwendig kannste rauslöschen
+   / * async function fetchAllNews() {
       try {
         const response = await fetch("/news");
         if (!response.ok) throw new Error("Fehler beim Abrufen der News");
@@ -677,5 +677,248 @@ header {
 
     fetchAllNews();*/
   </script>
+  <script>
+    // Helper: für Cloudinary-Links on-the-fly H.264/MP4 erzwingen
+    function getPlayUrl(url) {
+      if (/res\.cloudinary\.com/.test(url) && !url.toLowerCase().endsWith('.mp4')) {
+        return url
+          .replace(/\/upload\/(v\d+\/)?/, '/upload/f_mp4/')
+          .replace(/\.\w+$/, '.mp4');
+      }
+      return url;
+    }
+  
+    // Tipp-Box (unverändert)
+    function setupNewsTipBox() {
+      const isTouch =
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        navigator.msMaxTouchPoints > 0;
+      const tip = document.createElement('div');
+      tip.className = 'gallery-tip';
+      tip.innerHTML = `
+        <span data-i18n="${isTouch ? 'news.tip.touch' : 'gallery.tip.click'}"></span>
+        <button class="gallery-tip-close" data-i18n="gallery.tip.ok"></button>
+      `;
+      document.body.appendChild(tip);
+      tip.querySelector('.gallery-tip-close').addEventListener('click', () => {
+        document.body.removeChild(tip);
+      });
+      // Übersetzung direkt anstoßen
+      if (typeof setLanguage === 'function' && window.currentLang) {
+        setLanguage(window.currentLang);
+      } else {
+        document.dispatchEvent(new Event('i18n:translate'));
+      }
+    }
+  
+    const ITEMS_PER_PAGE = 12;
+    let allNews = [];
+    let currentPage = 1;
+  
+    document.addEventListener("DOMContentLoaded", () => {
+      setupNewsTipBox();
+      fetchAllNews();
+    });
+  
+    async function fetchAllNews() {
+      try {
+        const res = await fetch("/news");
+        if (!res.ok) throw new Error("Fehler beim Abrufen der News");
+        const news = await res.json();
+        allNews = news.sort((a, b) => b.id - a.id);
+        renderPage();
+        renderPagination();
+        attachNewsLightbox();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  
+    function renderPage() {
+      const container = document.getElementById("all-news-list");
+      container.innerHTML = "";
+      const start = (currentPage - 1) * ITEMS_PER_PAGE;
+      const items = allNews.slice(start, start + ITEMS_PER_PAGE);
+  
+      items.forEach(item => {
+        let mediaHtml = "";
+        if (item.media?.length) {
+          const url = item.media[0];
+          const ext = url.split('.').pop().toLowerCase();
+          const isVideo = /\.(mp4|webm|ogg|mkv)$/i.test(url);
+  
+          if (isVideo) {
+            const playUrl   = getPlayUrl(url);
+            const posterUrl = url.replace(/\.\w+$/, '.jpg');
+            mediaHtml = `
+              <video
+                src="${playUrl}"
+                poster="${posterUrl}"
+                controls
+                playsinline
+                webkit-playsinline
+                muted
+                class="news-video"
+              >
+                <source src="${playUrl}" type="video/mp4">
+                <source src="${url}" type="video/${ext}">
+                Dein Browser unterstützt keine HTML5-Videos.
+              </video>
+            `;
+          } else {
+            mediaHtml = `<img src="${url}" alt="Bild">`;
+          }
+        }
+  
+        const updated = item.updatedAt && item.updatedAt !== item.createdAt
+          ? `<div><i class="fas fa-edit"></i>
+               <span data-i18n="updated_at">Bearbeitet am</span>: ${item.updatedAt}
+             </div>`
+          : "";
+  
+        const card = document.createElement("div");
+        card.className = "gallery-item";
+        card.innerHTML = `
+          <a href="news-detail.html?id=${item.id}" class="gallery-link">
+            ${mediaHtml}
+            <div class="media-title" title="${item.title}">${item.title}</div>
+            <div class="news-snippet">
+              ${item.content.length > 200 
+                ? item.content.slice(0, 200) + "..." 
+                : item.content}
+            </div>
+            <div class="news-meta">
+              <div>
+                <i class="fas fa-clock"></i>
+                <span data-i18n="created_at">Erstellt am</span>: ${item.createdAt}
+              </div>
+              ${updated}
+            </div>
+            <div class="details-bar">
+              <span data-i18n="read_more">Mehr lesen</span>
+              <i class="fas fa-arrow-right"></i>
+            </div>
+          </a>
+        `;
+        container.appendChild(card);
+      });
+    }
+  
+    function renderPagination() {
+      const pag = document.getElementById("pagination");
+      pag.innerHTML = "";
+      const total = Math.ceil(allNews.length / ITEMS_PER_PAGE);
+      if (total <= 1) return;
+  
+      const prev = document.createElement("button");
+      prev.innerHTML = `&laquo; <span data-i18n="pagination.prev">Zurück</span>`;
+      prev.disabled = currentPage === 1;
+      prev.addEventListener("click", () => {
+        currentPage--;
+        renderPage();
+        renderPagination();
+        attachNewsLightbox();
+      });
+      pag.appendChild(prev);
+  
+      for (let i = 1; i <= total; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        if (i === currentPage) btn.classList.add("active");
+        btn.addEventListener("click", () => {
+          currentPage = i;
+          renderPage();
+          renderPagination();
+          attachNewsLightbox();
+        });
+        pag.appendChild(btn);
+      }
+  
+      const next = document.createElement("button");
+      next.innerHTML = `<span data-i18n="pagination.next">Weiter</span> &raquo;`;
+      next.disabled = currentPage === total;
+      next.addEventListener("click", () => {
+        currentPage++;
+        renderPage();
+        renderPagination();
+        attachNewsLightbox();
+      });
+      pag.appendChild(next);
+    }
+  
+    // Lightbox-Handler
+// Statt: querySelectorAll("img, video")
+function attachNewsLightbox() {
+  const container = document.getElementById("all-news-list");
+
+  // Nur Bilder öffnen die Lightbox
+  container.querySelectorAll("img").forEach(el => {
+    el.style.cursor = "zoom-in";
+    el.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openLightbox(el.src, false);
+    });
+  });
+
+  // Klicks auf Videos fangen wir ab, damit der <a>-Link nicht greift
+  container.querySelectorAll("video").forEach(v => {
+    v.style.cursor = "pointer";
+    v.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      // optional: Play/Pause-Toggle
+      // if (v.paused) v.play(); else v.pause();
+    });
+  });
+}
+
+
+  
+    function openLightbox(url, isVideo) {
+      const overlay = document.createElement("div");
+      overlay.className = "lightbox-overlay";
+  
+      const btnClose = document.createElement("button");
+      btnClose.className = "lightbox-close";
+      btnClose.innerHTML = "&times;";
+      overlay.appendChild(btnClose);
+      btnClose.addEventListener("click", () => document.body.removeChild(overlay));
+  
+      let mediaEl;
+      if (isVideo) {
+        const v = document.createElement("video");
+        v.src               = getPlayUrl(url);
+        v.controls          = true;
+        v.autoplay          = true;
+        v.playsInline       = true;
+        v.webkitPlaysInline = true;
+        mediaEl = v;
+      } else {
+        const i = document.createElement("img");
+        i.src = url;
+        mediaEl = i;
+      }
+      mediaEl.className = "lightbox-content";
+      overlay.appendChild(mediaEl);
+  
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay) document.body.removeChild(overlay);
+      });
+  
+      document.body.appendChild(overlay);
+    }
+  
+    // Header-Menü Toggle (unverändert)
+    document.addEventListener("DOMContentLoaded", function () {
+      const headerToggle = document.getElementById("headerMenuToggle");
+      const nav = document.getElementById("mainNav");
+      headerToggle.addEventListener("click", function () {
+        nav.classList.toggle("show");
+      });
+    });
+  </script>
+  
 </body>
 </html>

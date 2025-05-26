@@ -144,6 +144,134 @@ h1 {
   </div>
 
   <script>
+    // Helper: Cloudinary → H.264 MP4 auf iOS erzwingen
+    function getPlayUrl(url) {
+      if (/res\.cloudinary\.com/.test(url) && !url.toLowerCase().endsWith('.mp4')) {
+        return url
+          .replace(/\/upload\/(v\d+\/)?/, '/upload/f_mp4/')
+          .replace(/\.\w+$/, '.mp4');
+      }
+      return url;
+    }
+  
+    // News-Detail laden und rendern
+    async function fetchNewsDetail() {
+      const id = new URLSearchParams(window.location.search).get("id");
+      const container = document.getElementById("news-detail");
+      if (!id) {
+        container.innerHTML = "<p>Keine ID übergeben.</p>";
+        return;
+      }
+      try {
+        const res = await fetch("/news/" + id);
+        if (!res.ok) throw new Error("Fehler beim Laden der News");
+        const data = await res.json();
+  
+        let mediaHtml = "";
+        if (Array.isArray(data.media)) {
+          data.media.forEach(url => {
+            const ext = url.split('.').pop().toLowerCase();
+            const isVideo = /\.(mp4|webm|ogg|mkv)$/i.test(url);
+            if (isVideo) {
+              const playUrl   = getPlayUrl(url);
+              const posterUrl = url.replace(/\.\w+$/, '.jpg');
+              mediaHtml += `
+                <video
+                  src="${playUrl}"
+                  poster="${posterUrl}"
+                  controls
+                  playsinline
+                  webkit-playsinline
+                  muted
+                  class="detail-video"
+                >
+                  <source src="${playUrl}" type="video/mp4">
+                  <source src="${url}" type="video/${ext}">
+                  Dein Browser unterstützt HTML5-Videos nicht.
+                </video>
+              `;
+            } else {
+              mediaHtml += `<img src="${url}" alt="Bild">`;
+            }
+          });
+        }
+  
+        container.innerHTML = `
+          <h1>${data.title}</h1>
+          <small>
+            <span data-i18n="created_at">Erstellt am</span>: ${data.createdAt}
+            ${data.updatedAt && data.updatedAt !== data.createdAt
+              ? ` | <span data-i18n="updated_at">Bearbeitet am</span>: ${data.updatedAt}`
+              : ""}
+          </small>
+          <div>${mediaHtml}</div>
+          <p>${data.content}</p>
+          <a href="index.html" class="back-link" data-i18n="to_home">
+            ← Zur Startseite
+          </a><br>
+          <a href="gallery.html" class="back-link" data-i18n="back_to_gallery">
+            ← Zu Fotos/Videos
+          </a>
+        `;
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p>Fehler beim Laden der News.</p>";
+      }
+    }
+  
+    // Overlay nur für Bilder, Videos abfangen
+    document.addEventListener("click", function(e) {
+      // Bilder: Zoom-Overlay
+      if (e.target.tagName === "IMG" && !e.target.classList.contains("no-zoom")) {
+        const overlay = document.createElement("div");
+        Object.assign(overlay.style, {
+          position: "fixed",
+          top: 0, left: 0,
+          width: "100vw", height: "100vh",
+          background: "rgba(0,0,0,0.8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10050,
+          cursor: "zoom-out"
+        });
+        const img = e.target.cloneNode();
+        img.style.maxWidth = "90%";
+        img.style.maxHeight = "90%";
+        overlay.appendChild(img);
+        const btn = document.createElement("button");
+        btn.className = "overlay-close";
+        btn.innerHTML = '<i class="fas fa-times"></i>';
+        overlay.appendChild(btn);
+        btn.addEventListener("click", () => document.body.removeChild(overlay));
+        overlay.addEventListener("click", ev => {
+          if (ev.target === overlay) document.body.removeChild(overlay);
+        });
+        document.body.appendChild(overlay);
+        return;
+      }
+      // Videos: Klick abfangen, damit kein Link- oder Overlay-Effekt
+      if (e.target.tagName === "VIDEO") {
+        e.preventDefault();
+        e.stopPropagation();
+        // optional: per Klick Play/Pause toggle
+        // const v = e.target; v.paused ? v.play() : v.pause();
+      }
+    });
+  
+    // i18n: Nachladen der Übersetzungen, falls nötig
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchNewsDetail();
+      if (typeof setLanguage === 'function' && window.currentLang) {
+        setLanguage(window.currentLang);
+      } else {
+        document.dispatchEvent(new Event('i18n:translate'));
+      }
+    });
+  </script>
+  
+<!--
+  <script>
     async function fetchNewsDetail() {
       const id = new URLSearchParams(window.location.search).get("id");
       if (!id) {
@@ -251,6 +379,6 @@ h1 {
   }
 });
     fetchNewsDetail();
-  </script>
+  </script>-->
 </body>
 </html>

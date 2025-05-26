@@ -167,7 +167,135 @@ h1 {
   <div class="event-detail-container" id="event-detail">
     <p>Lade Event...</p>
   </div>
-
+  <script>
+    // ===== Helper: Cloudinary → H.264 MP4 auf iOS =====
+    function getPlayUrl(url) {
+      if (/res\.cloudinary\.com/.test(url) && !url.toLowerCase().endsWith('.mp4')) {
+        return url
+          .replace(/\/upload\/(v\d+\/)?/, '/upload/f_mp4/')
+          .replace(/\.\w+$/, '.mp4');
+      }
+      return url;
+    }
+  
+    // ===== Detail laden & rendern =====
+    async function fetchEventDetail() {
+      const id = new URLSearchParams(window.location.search).get("id");
+      if (!id) {
+        document.getElementById("event-detail").innerHTML = "<p>Keine ID übergeben.</p>";
+        return;
+      }
+  
+      try {
+        const res = await fetch("/events/" + id);
+        if (!res.ok) throw new Error("Fehler beim Laden des Events");
+        const event = await res.json();
+  
+        let mediaHtml = "";
+        if (event.media && event.media.length > 0) {
+          event.media.forEach(url => {
+            const ext = url.split('.').pop().toLowerCase();
+            const isVideo = /\.(mp4|webm|ogg|mkv)$/i.test(url);
+            if (isVideo) {
+              const playUrl   = getPlayUrl(url);
+              const posterUrl = url.replace(/\.\w+$/, '.jpg');
+              mediaHtml += `
+                <video
+                  controls
+                  playsinline
+                  webkit-playsinline
+                  poster="${posterUrl}"
+                  class="event-detail-video"
+                >
+                  <source src="${playUrl}" type="video/mp4">
+                  <source src="${url}" type="video/${ext}">
+                  Dein Browser unterstützt HTML5-Videos nicht.
+                </video>
+              `;
+            } else {
+              mediaHtml += `<img src="${url}" alt="Event Bild">`;
+            }
+          });
+        }
+  
+        document.getElementById("event-detail").innerHTML = `
+          <h1>${event.title}</h1>
+          <div class="event-date">
+            ${event.date}${event.time ? " – " + event.time : ""}
+          </div>
+          <p class="event-meta">
+            <i class="fas fa-map-marker-alt"></i> ${event.location}
+          </p>
+          <div>${mediaHtml}</div>
+          <p>${event.content}</p>
+          <small>
+            <span data-i18n="created_at">Erstellt am</span>: ${event.createdAt}
+            ${
+              event.updatedAt && event.updatedAt !== event.createdAt
+                ? ` | <span data-i18n="updated_at">Bearbeitet am</span>: ${event.updatedAt}`
+                : ``
+            }
+          </small>
+          <br><br>
+          <a href="index.html" class="back-link" data-i18n="to_home">← Zur Startseite</a><br>
+          <a href="gallery.html" class="back-link" data-i18n="back_to_gallery">← Zu Fotos/Videos</a>
+        `;
+      } catch (err) {
+        console.error(err);
+        document.getElementById("event-detail").innerHTML =
+          "<p>Fehler beim Laden des Events.</p>";
+      }
+    }
+  
+    // ===== Nur Bilder bekommen weiterhin Overlay =====
+    document.addEventListener("click", function(e) {
+      if (e.target.tagName === "IMG" && !e.target.classList.contains("no-zoom")) {
+        const overlay = document.createElement("div");
+        Object.assign(overlay.style, {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          background: "rgba(0,0,0,0.8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10050,
+          cursor: "zoom-out"
+        });
+  
+        const clone = document.createElement("img");
+        clone.src = e.target.src;
+        Object.assign(clone.style, {
+          maxWidth: "90%",
+          maxHeight: "90%",
+          borderRadius: "8px"
+        });
+        overlay.appendChild(clone);
+  
+        const btnClose = document.createElement("button");
+        btnClose.innerHTML = '<i class="fas fa-times"></i>';
+        btnClose.className = "overlay-close";
+        overlay.appendChild(btnClose);
+        btnClose.addEventListener("click", () => document.body.removeChild(overlay));
+  
+        overlay.addEventListener("click", e2 => {
+          if (e2.target === overlay) document.body.removeChild(overlay);
+        });
+  
+        document.body.appendChild(overlay);
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      // Klicks auf <video> NICHT abfangen – native Controls bleiben da
+    });
+  
+    // ===== Start =====
+    document.addEventListener("DOMContentLoaded", fetchEventDetail);
+  </script>
+  
+<!-- 
   <script>
     async function fetchEventDetail() {
       const id = new URLSearchParams(window.location.search).get("id");
@@ -281,5 +409,6 @@ h1 {
 
     fetchEventDetail();
   </script>
+  -->
 </body>
 </html>

@@ -968,7 +968,7 @@
 /* Hero-Sektion mit Hintergrundbild */
 #hero {
   /* Pfad zum Bild anpassen */
-  background-image: url('titelbild.png');
+  background-image: url('titelbild.webp');
   background-size: cover;            /* skaliert das Bild, damit es den Container füllt */
   background-position: 50% 30%;       /* zentriert das Bild */
   background-repeat: no-repeat;      /* wiederholt das Bild nicht */
@@ -1094,6 +1094,104 @@
   padding: 20px;
   text-align: center;
 }
+
+.hero-content {
+  /* Breite passt sich zwischen 280px und 800px an, optimal 80% */
+  width: clamp(280px, 80%, 800px);
+  max-width: 100%;
+  /* zentriert den Rahmen */
+  margin: 0 auto;
+  /* border-box, damit Padding und Border in der Breite enthalten sind */
+  box-sizing: border-box;
+}
+
+/* Auf sehr kleinen Bildschirmen mehr Platz am Rand geben */
+@media (max-width: 400px) {
+  .hero-content {
+    width: 95%;
+    padding: 15px;
+  }
+}
+/* Hero-Bereich darf nicht nach außen scrollen */
+.hero {
+  overflow: hidden;
+  display: flex;            /* schon gesetzt, sorgt für Zentrierung */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Text-Kasten responsiv in Breite UND Höhe */
+.hero-content {
+  /* Breite zwischen 280px und 800px, idealerweise 80% des Viewports */
+  width: clamp(280px, 80%, 800px);
+  margin: 0 auto;
+  
+  /* Maximal 80% der Höhe des Hero-Containers */
+  max-height: 80%;
+  
+  /* Innenabstand skaliert mit Viewport, damit es nicht zu groß wird */
+  padding: clamp(0.5rem, 2vw, 2rem);
+  
+  /* falls der Text doch mal zu lang wird, scrollt nur der Kasten */
+  overflow-y: auto;
+  
+  /* Rahmen (border) und Padding sind in der Breite/Höhe enthalten */
+  box-sizing: border-box;
+}
+
+/* Besondere Feinjustierung auf sehr flachen Displays */
+@media (max-height: 500px) {
+  .hero-content {
+    /* Weniger Padding, kleinere Schrift, damit alles reinpasst */
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Entfernt jegliche Scrollbars im Text-Kasten */
+.hero-content {
+  overflow: hidden;
+}
+
+/* Überschrift skaliert zwischen 2rem und 3rem, abhängig von der Viewport-Breite */
+.hero-content h1 {
+  font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1.1;
+}
+
+/* Absatz skaliert zwischen 1rem und 1.2rem */
+.hero-content p {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  line-height: 1.4;
+}
+@media (max-width: 768px) {
+  /* News und Events im gleichen 1-Spalten-Layout */
+  .news-grid,
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Gleiche Abstände an den Seiten sicherstellen */
+  .events-grid {
+    /* Optional: dieselbe Padding-/Margin-Regel wie .news-grid */
+    margin: 0 -20px;          /* hebt das container-Padding auf */
+  }
+  .container > section, 
+  .container > #events-section .container {
+    padding: 0 20px;         /* sorgt für identische Ränder */
+  }
+
+  .section-title, #events-section h2 {
+    padding-top: 50px;
+        }
+          /* Einheitliche Ausrichtung der Section-Titel */
+  #news-section h2 {
+    /* dieselben 20 px links/rechts wie dein .container */
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+}
+
     </style>
 </head>
 <body>

@@ -426,7 +426,232 @@ header {
     <a href="index.html" class="back-link" data-i18n="main.back_to_home"></a>
   </div>
 </main>
+<script>
+  // ===== Helper: Cloudinary → H.264 MP4 auf iOS =====
+  function getPlayUrl(url) {
+    if (/res\.cloudinary\.com/.test(url) && !url.toLowerCase().endsWith('.mp4')) {
+      return url
+        .replace(/\/upload\/(v\d+\/)?/, '/upload/f_mp4/')
+        .replace(/\.\w+$/, '.mp4');
+    }
+    return url;
+  }
 
+  // ===== Tipp-Box =====
+  function setupTipBox() {
+    const isTouch =
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      navigator.msMaxTouchPoints > 0;
+    const tip = document.createElement('div');
+    tip.className = 'gallery-tip';
+    tip.innerHTML = `
+      <span data-i18n="${isTouch ? 'gallery.tip.touch' : 'gallery.tip.click'}"></span>
+      <button class="gallery-tip-close" data-i18n="gallery.tip.ok"></button>
+    `;
+    document.body.appendChild(tip);
+    tip.querySelector('.gallery-tip-close')
+      .addEventListener('click', () => document.body.removeChild(tip));
+    // Trigger i18n
+    if (typeof setLanguage === 'function' && window.currentLang) {
+      setLanguage(window.currentLang);
+    } else {
+      document.dispatchEvent(new Event('i18n:translate'));
+    }
+  }
+
+  // ===== Globals =====
+  const ITEMS_PER_PAGE = 12;
+  let allEvents = [];
+  let currentPage = 1;
+
+  // ===== Init =====
+  document.addEventListener('DOMContentLoaded', () => {
+    setupTipBox();
+    fetchAllEvents();
+    // Header-Menu Toggle
+    const headerToggle = document.getElementById('headerMenuToggle');
+    const nav = document.getElementById('mainNav');
+    headerToggle.addEventListener('click', () => nav.classList.toggle('show'));
+  });
+
+  // ===== Fetch & Sort =====
+  async function fetchAllEvents() {
+    try {
+      const res = await fetch('/events');
+      if (!res.ok) throw new Error('Fehler beim Abrufen der Veranstaltungen');
+      const events = await res.json();
+      allEvents = events.sort((a, b) => b.id - a.id);
+      renderPage();
+      renderPagination();
+      attachLightbox();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // ===== Render Page =====
+  function renderPage() {
+    const container = document.getElementById('all-events-list');
+    container.innerHTML = '';
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const slice = allEvents.slice(start, start + ITEMS_PER_PAGE);
+
+    slice.forEach(ev => {
+      let mediaHtml = '';
+      if (ev.media?.length) {
+        const url = ev.media[0];
+        const ext = url.split('.').pop().toLowerCase();
+        const isVideo = /\.(mp4|webm|ogg|mkv)$/i.test(url);
+        if (isVideo) {
+          const playUrl   = getPlayUrl(url);
+          const posterUrl = url.replace(/\.\w+$/, '.jpg');
+          mediaHtml = `
+            <video
+              src="${playUrl}"
+              poster="${posterUrl}"
+              muted
+              controls
+              playsinline
+              webkit-playsinline
+              class="gallery-video"
+            >
+              <source src="${playUrl}" type="video/mp4">
+              <source src="${url}" type="video/${ext}">
+              Dein Browser unterstützt HTML5-Videos nicht.
+            </video>
+          `;
+        } else {
+          mediaHtml = `<img src="${url}" alt="Bild">`;
+        }
+      }
+
+      const card = document.createElement('div');
+      card.className = 'gallery-item';
+      card.innerHTML = `
+        <a href="events-detail.html?id=${ev.id}" class="gallery-link">
+          ${mediaHtml}
+          <div class="media-title" title="${ev.title}">${ev.title}</div>
+          <div class="event-meta">
+            <div>
+              <i class="fas fa-calendar-alt"></i> ${ev.date}
+              ${ev.time
+                ? `<span class="event-time"><i class="fas fa-clock"></i> ${ev.time}</span>`
+                : ''
+              }
+            </div>
+            <div><i class="fas fa-map-marker-alt"></i> ${ev.location}</div>
+          </div>
+          <div class="details-bar" data-i18n="read_more">
+            Details anzeigen <i class="fas fa-arrow-right"></i>
+          </div>
+        </a>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ===== Render Pagination =====
+  function renderPagination() {
+    const p = document.getElementById('pagination');
+    p.innerHTML = '';
+    const total = Math.ceil(allEvents.length / ITEMS_PER_PAGE);
+    if (total <= 1) return;
+
+    const prev = document.createElement('button');
+    prev.innerHTML = `&laquo; <span data-i18n="pagination.prev">Zurück</span>`;
+    prev.disabled = currentPage === 1;
+    prev.addEventListener('click', () => {
+      currentPage--;
+      renderPage(); renderPagination(); attachLightbox();
+    });
+    p.appendChild(prev);
+
+    for (let i = 1; i <= total; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      if (i === currentPage) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        currentPage = i;
+        renderPage(); renderPagination(); attachLightbox();
+      });
+      p.appendChild(btn);
+    }
+
+    const next = document.createElement('button');
+    next.innerHTML = `<span data-i18n="pagination.next">Weiter</span> &raquo;`;
+    next.disabled = currentPage === total;
+    next.addEventListener('click', () => {
+      currentPage++;
+      renderPage(); renderPagination(); attachLightbox();
+    });
+    p.appendChild(next);
+  }
+
+  // ===== Lightbox =====
+  function attachLightbox() {
+  const container = document.getElementById("all-events-list");
+
+  // Nur Bilder öffnen die Lightbox
+  container.querySelectorAll("img").forEach(el => {
+    el.style.cursor = "zoom-in";
+    el.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openLightbox(el.src, false);
+    });
+  });
+
+  // Klicks auf Videos abfangen, damit der Link nicht ausgelöst wird
+  container.querySelectorAll("video").forEach(v => {
+    v.style.cursor = "pointer";
+    v.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Optional: per Klick Play/Pause umschalten
+      // if (v.paused) v.play(); else v.pause();
+    });
+  });
+}
+
+
+  function openLightbox(url, isVideo) {
+    const overlay = document.createElement('div');
+    overlay.className = 'lightbox-overlay';
+
+    const btn = document.createElement('button');
+    btn.className = 'lightbox-close';
+    btn.innerHTML = '&times;';
+    overlay.appendChild(btn);
+    btn.addEventListener('click', () => document.body.removeChild(overlay));
+
+    let mediaEl;
+    if (isVideo) {
+      const v = document.createElement('video');
+      v.src               = getPlayUrl(url);
+      v.controls          = true;
+      v.autoplay          = true;
+      v.playsInline       = true;
+      v.webkitPlaysInline = true;
+      mediaEl = v;
+    } else {
+      const i = document.createElement('img');
+      i.src = url;
+      mediaEl = i;
+    }
+    mediaEl.className = 'lightbox-content';
+    overlay.appendChild(mediaEl);
+
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) document.body.removeChild(overlay);
+    });
+
+    document.body.appendChild(overlay);
+  }
+</script>
+
+
+<!-- AKTUELLSTE VERSION:
 <script>
   const ITEMS_PER_PAGE = 12;
   let allEvents = [];
@@ -585,7 +810,7 @@ header {
 
 
 
-</script>
+</script>-->
 
 <!--
   <script>

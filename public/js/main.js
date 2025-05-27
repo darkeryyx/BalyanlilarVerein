@@ -170,7 +170,7 @@ mediaHtml = `
     console.error("Fehler beim Abrufen der Veranstaltungen:", error);
   }
 }
-
+/*
 document.addEventListener("click", function(e) {
   // Nur Bilder (IMG) zoomen, Videos ignorieren
   if (e.target.tagName !== "IMG" || e.target.classList.contains("no-zoom")) {
@@ -205,7 +205,53 @@ document.addEventListener("click", function(e) {
   overlay.addEventListener("click", () => {
     document.body.removeChild(overlay);
   });
-});
+});*/
+// 1) Hook auf alle Bilder in News und Events
+function attachLightboxHandlers() {
+  // Alle IMG-Elemente, außer .no-zoom
+  document.querySelectorAll("img:not(.no-zoom)").forEach(el => {
+    el.style.cursor = "zoom-in";
+    el.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openLightbox(el.src, false);
+    });
+  });
+}
+
+// 2) öffnet das Overlay mit Bild oder Video
+function openLightbox(url, isVideo) {
+  const overlay = document.createElement("div");
+  overlay.className = "lightbox-overlay";
+
+  const btnClose = document.createElement("button");
+  btnClose.className = "lightbox-close";
+  btnClose.innerHTML = "&times;";
+  overlay.appendChild(btnClose);
+  btnClose.addEventListener("click", () => document.body.removeChild(overlay));
+
+  let mediaEl;
+  if (isVideo) {
+    mediaEl = document.createElement("video");
+    mediaEl.src = url;
+    mediaEl.controls = true;
+    mediaEl.autoplay = true;
+    mediaEl.playsInline = true;
+    mediaEl.webkitPlaysInline = true;
+  } else {
+    mediaEl = document.createElement("img");
+    mediaEl.src = url;
+  }
+  mediaEl.className = "lightbox-content";
+  overlay.appendChild(mediaEl);
+
+  // Klick auf das dunkle Overlay (außerhalb des Bildes) schließt ebenfalls
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) document.body.removeChild(overlay);
+  });
+
+  document.body.appendChild(overlay);
+}
 
 /*async function fetchNews() {
     try {
@@ -388,8 +434,11 @@ document.addEventListener("DOMContentLoaded", function () {
       nav.classList.toggle("show");
     });
   });
-  window.onload = function() {
-    fetchNews();
-    fetchEvents();
-  };
-  
+// 3) Nach dem Laden der News und Events aufrufen
+window.onload = function() {
+  fetchNews();
+  fetchEvents();
+
+  // erst nach dem dynamischen Einfügen …
+  setTimeout(attachLightboxHandlers, 500);
+};

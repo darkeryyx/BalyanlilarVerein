@@ -1105,6 +1105,50 @@
   box-sizing: border-box;
 }
 
+/* Lightbox Overlay */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10050;
+}
+
+/* Close-Button oben rechts */
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 2.5rem;
+  width: 40px;       /* feste Breite */
+  height: 40px;      /* feste Höhe */
+  line-height: 40px; /* zentriert das × vertikal */
+  cursor: pointer;
+  z-index: 10051;
+  outline: none;
+}
+.lightbox-close:hover {
+  
+
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+/* Inhalt (Bild oder Video) */
+.lightbox-content {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+
 /* Auf sehr kleinen Bildschirmen mehr Platz am Rand geben */
 @media (max-width: 400px) {
   .hero-content {
@@ -1212,8 +1256,8 @@
           <button class="header-menu-toggle" id="headerMenuToggle"  data-i18n="header.menu"></button>
 
           <nav class="navigation" id="mainNav">
-            <a href="#news-section" data-i18n="nav.news"></a>
-            <a href="#events-section" data-i18n="nav.events"></a>
+            <a href="news.html" data-i18n="nav.news"></a>
+            <a href="events.html" data-i18n="nav.events"></a>
             <a href="gallery.html" data-i18n="nav.gallery"></a>
             <a href="#about" data-i18n="nav.about"></a>
             <a href="#contact" data-i18n="nav.contact"></a>

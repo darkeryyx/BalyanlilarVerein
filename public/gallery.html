@@ -98,6 +98,29 @@
     .gallery-item:hover {
       transform: translateY(-3px);
     }
+    .gallery-tip {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(28, 42, 68, 0.9);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 10000;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+.gallery-tip button.gallery-tip-close {
+  background: var(--secondary);
+  border: none;
+  color: white;
+  padding: 3px 8px;
+  margin-left: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
     
     .media-container {
       position: relative;

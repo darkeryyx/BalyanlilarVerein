@@ -2947,6 +2947,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`/news?cb=${cacheBuster}`);
             if (!response.ok) throw new Error("Fehler beim Abrufen der News");
             const news = await response.json();
+            news.reverse();
             const newsList = document.getElementById("news-list");
             newsList.innerHTML = "";
 
@@ -2972,6 +2973,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`/events?cb=${cacheBuster}`);
             if (!response.ok) throw new Error("Fehler beim Abrufen der Veranstaltungen");
             const events = await response.json();
+
+               events.reverse();
             const eventsList = document.getElementById("events-list");
             eventsList.innerHTML = "";
 

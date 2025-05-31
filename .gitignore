@@ -10,4 +10,16 @@ titelbild.jpg
 titelbild.png
 titelbild.webp
 impressum.html
+datenschutz.html
 /node_modules/
+# Medien-Dateien ignorieren
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.mp4
+*.webm
+*.mov
+*.avi
+*.mkv

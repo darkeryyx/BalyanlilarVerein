@@ -801,10 +801,12 @@ const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server läuft auf http://localhost:${PORT}`);
 })/*/
-app.listen(3000, '0.0.0.0', () => {
-  console.log('Server läuft auf Port 3000 (alle Netzwerk-Interfaces)');
-});
+const PORT = env.PORT || 45800;
 
+
+app.listen(PORT, () => {
+  console.log(`Server läuft auf Port ${PORT}`);
+});
 
 
 console.log("📂 News-Datei Pfad:", newsFile);

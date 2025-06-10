@@ -18,7 +18,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedIPs = ['89.0.125.145', '2a0a:a54a:a046:0:e1b1:8613:f4df:6baf'];
+const allowedIPs = ['127.0.0.1',   '::1', '89.0.125.145', '2a0a:a54a:a046:0:e1b1:8613:f4df:6baf'];
 
 app.use((req, res, next) => {
   // IPv4-Adressen können als ::ffff:IPv4 erscheinen, daher Präfix entfernen

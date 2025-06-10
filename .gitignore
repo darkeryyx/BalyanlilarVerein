@@ -2,6 +2,7 @@ process.env
 hash.js
 news.json
 events.json
+/data/
 gruppenfoto.jpg
 gruppenfoto2.png
 gruppenfoto3.jpg

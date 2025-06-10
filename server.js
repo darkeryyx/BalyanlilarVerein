@@ -17,7 +17,7 @@ app.use((req, res, next) => {
   console.log('Incoming request from IP:', req.ip);
   next();
 });
-
+/*
 const allowedIPs = ['127.0.0.1',   '::1', '89.0.125.145', '2a0a:a54a:a046:0:e1b1:8613:f4df:6baf'];
 
 app.use((req, res, next) => {
@@ -32,7 +32,7 @@ app.use((req, res, next) => {
   res.status(503).sendFile(path.join(__dirname, 'public', 'maintenance.html'));
 });
 
-
+*/
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));

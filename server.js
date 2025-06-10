@@ -2,12 +2,6 @@ const { readFileSync, writeFileSync } = require("fs");
 const { resolve } = require("path");
 const { parse } = require("dotenv");
 
-const env = parse(readFileSync(resolve(process.cwd(), "process.env")));
-const express = require('express');
-const app = express();
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-
 const path = require('path');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
@@ -15,6 +9,33 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
 
+const env = parse(readFileSync(resolve(process.cwd(), "process.env")));
+const express = require('express');
+const app = express();
+app.set('trust proxy', true);
+app.use((req, res, next) => {
+  console.log('Incoming request from IP:', req.ip);
+  next();
+});
+
+const allowedIPs = ['89.0.125.145', '2a0a:a54a:a046:0:e1b1:8613:f4df:6baf'];
+
+app.use((req, res, next) => {
+  // IPv4-Adressen können als ::ffff:IPv4 erscheinen, daher Präfix entfernen
+  let ip = req.ip;
+  if (ip.startsWith('::ffff:')) {
+    ip = ip.substring(7);
+  }
+  if (allowedIPs.includes(ip)) {
+    return next(); // Zugriff erlauben
+  }
+  res.status(503).sendFile(path.join(__dirname, 'public', 'maintenance.html'));
+});
+
+
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Add this before your routes
 app.use(cors({
   origin: true,  // Allow same-origin requests

@@ -2438,7 +2438,6 @@ async function removeExistingMediaEvent(eventId, mediaIndex) {
 });
 */
 
-// von neuer ai: 
 // Tab-Funktionalität verbessern
 document.addEventListener('DOMContentLoaded', function() {
     // Tab-Wechsel-Funktionalität
@@ -3034,6 +3033,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${type === 'event' && item.date ? `<p><strong>Datum:</strong> ${item.date} ${item.time || ''}</p>` : ''}
                 ${type === 'event' && item.location ? `<p><strong>Ort:</strong> ${item.location}</p>` : ''}
             `;
+modalContent
+  .querySelectorAll('p')
+  .forEach(p => {
+    p.innerHTML = p.textContent.replace(/\n/g, '<br>');
+  });
 
             // Medien anhängen
             if (item.media && item.media.length) {
@@ -3132,9 +3136,11 @@ document.addEventListener('DOMContentLoaded', function() {
         content.appendChild(title);
         
         const text = document.createElement('p');
-        text.className = 'item-text';
-        text.textContent = item.content;
-        content.appendChild(text);
+text.className = 'item-text';
+// Zeilenumbrüche in <br> verwandeln:
+text.innerHTML = item.content.replace(/\n/g, '<br>');
+content.appendChild(text);
+
         
         // Details für Events
         if (type === 'event') {

@@ -53,6 +53,7 @@ h1 {
       max-width: 100%;
       margin-bottom: 20px;
       border-radius: 8px;
+      cursor: pointer;
     }
     .detail-container p {
       line-height: 1.6;
@@ -68,7 +69,7 @@ h1 {
       font-weight: bold;
     }
     /* Language Switcher */
-    .lang-switcher {
+    /*.lang-switcher {
     position: fixed;
     top: 15px;
     right: 20px;
@@ -96,7 +97,44 @@ h1 {
 .lang-switcher button:hover,
 .lang-switcher button.active {
     background: var(--primary);
+}*/
+.lang-switcher {
+  position: fixed;
+  top: 15px; right: 20px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 5px;
+  z-index: 10002;
+  display: flex;
+  gap: 5px;
 }
+
+.lang-switcher button {
+  background: transparent;    /* kein oranger Hintergrund */
+  border: none;
+  padding: 0;                 /* kein Innenabstand */
+  width: 40px;                /* feste Größe (anpassbar) */
+  height: 28px;               /* Verhältnis 4:3 für Flaggen */
+  border-radius: 4px;         /* optional abrunden */
+  overflow: hidden;           /* Bild nicht überstehen lassen */
+  cursor: pointer;
+}
+
+.lang-switcher .flag-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* füllt den Container komplett aus */
+  display: block;
+}
+
+.lang-switcher button:hover,
+.lang-switcher button.active {
+  /* optional: beim Hover / Active einen dezenten Rahmen o.ä. */
+  outline: 2px solid var(--primary);
+}
+
 .overlay-close {
   position: fixed;
   top: 20px;
@@ -136,9 +174,13 @@ h1 {
 </head>
 <body>
   <div class="lang-switcher">
-    <button id="btn-de">DE</button>
-    <button id="btn-tr">TR</button>
-  </div>
+  <button id="btn-de" data-lang="de">
+    <img src="/flag-de.svg" alt="Deutsch" class="flag-icon no-zoom">
+  </button>
+  <button id="btn-tr" data-lang="tr">
+    <img src="/flag-tr.svg" alt="Türkçe" class="flag-icon no-zoom">
+  </button>
+</div>
   <div class="detail-container" id="news-detail">
     <p>Lade News...</p>
   </div>
@@ -205,7 +247,8 @@ h1 {
               : ""}
           </small>
           <div>${mediaHtml}</div>
-          <p>${data.content}</p>
+          <p>${data.content.replace(/\n/g, '<br>')}</p>
+
           <a href="index.html" class="back-link" data-i18n="to_home">
             ← Zur Startseite
           </a><br>
@@ -219,45 +262,68 @@ h1 {
       }
     }
   
-    // Overlay nur für Bilder, Videos abfangen
-    document.addEventListener("click", function(e) {
-      // Bilder: Zoom-Overlay
-      if (e.target.tagName === "IMG" && !e.target.classList.contains("no-zoom")) {
-        const overlay = document.createElement("div");
-        Object.assign(overlay.style, {
-          position: "fixed",
-          top: 0, left: 0,
-          width: "100vw", height: "100vh",
-          background: "rgba(0,0,0,0.8)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 10050,
-          cursor: "zoom-out"
-        });
-        const img = e.target.cloneNode();
-        img.style.maxWidth = "90%";
-        img.style.maxHeight = "90%";
-        overlay.appendChild(img);
-        const btn = document.createElement("button");
-        btn.className = "overlay-close";
-        btn.innerHTML = '<i class="fas fa-times"></i>';
-        overlay.appendChild(btn);
-        btn.addEventListener("click", () => document.body.removeChild(overlay));
-        overlay.addEventListener("click", ev => {
-          if (ev.target === overlay) document.body.removeChild(overlay);
-        });
-        document.body.appendChild(overlay);
-        return;
+     // Verhindert mehrfaches Öffnen der Lightbox
+  let overlayOpen = false;
+
+  document.addEventListener("click", function(e) {
+    // Wenn bereits eine Lightbox offen ist, nichts weiter tun
+    if (overlayOpen) return;
+
+    // Nur Bilder (ohne .no-zoom) öffnen die Lightbox
+    if (e.target.tagName === "IMG" && !e.target.classList.contains("no-zoom")) {
+      overlayOpen = true;
+
+      // Overlay-Container anlegen
+      const overlay = document.createElement("div");
+      Object.assign(overlay.style, {
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0,0,0,0.8)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 10050,
+        
+      });
+
+      // Bild klonen und ins Overlay packen
+      const img = e.target.cloneNode();
+      Object.assign(img.style, {
+        maxWidth: "90%",
+        maxHeight: "90%",
+        borderRadius: "8px"
+      });
+      overlay.appendChild(img);
+
+      // Close-Button hinzufügen
+      const btnClose = document.createElement("button");
+      btnClose.className = "overlay-close";
+      btnClose.innerHTML = '<i class="fas fa-times"></i>';
+      overlay.appendChild(btnClose);
+
+      // Funktion zum Entfernen der Lightbox
+      function removeOverlay() {
+        document.body.removeChild(overlay);
+        overlayOpen = false;
       }
-      // Videos: Klick abfangen, damit kein Link- oder Overlay-Effekt
-      if (e.target.tagName === "VIDEO") {
-        e.preventDefault();
-        e.stopPropagation();
-        // optional: per Klick Play/Pause toggle
-        // const v = e.target; v.paused ? v.play() : v.pause();
-      }
-    });
+
+      // Close-Button klickbar machen
+      btnClose.addEventListener("click", removeOverlay);
+      // Klick außerhalb des Bildes schließt ebenfalls
+      overlay.addEventListener("click", ev => {
+        if (ev.target === overlay) removeOverlay();
+      });
+
+      // Lightbox ins DOM einfügen
+      document.body.appendChild(overlay);
+      return;
+    }
+
+    // Klicks auf Videos werden nicht abgefangen, native Controls bleiben aktiv
+  });
   
     // i18n: Nachladen der Übersetzungen, falls nötig
     document.addEventListener("DOMContentLoaded", () => {

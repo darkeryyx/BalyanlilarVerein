@@ -87,7 +87,7 @@ window.TRANSLATIONS = {
     "gallery.tip.ok": "OK",
     "pagination.prev": "Zurück",
     "pagination.next": "Weiter",
-    "read_more": "Mehr lesen",
+    "read_more": "Mehr lesen →",
     "confirm.delete.news": "Möchten Sie diesen News-Eintrag wirklich löschen?"
   },
   tr: {
@@ -176,7 +176,7 @@ window.TRANSLATIONS = {
     "gallery.tip.ok": "Tamam",
     "pagination.prev": "Geri",
     "pagination.next": "İleri",
-    "read_more": "Daha fazlasını oku",
+    "read_more": "Daha fazlasını oku →",
     "confirm.delete.news":"Bu haberi gerçekten silmek istiyor musunuz?"
 
   }

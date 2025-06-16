@@ -284,7 +284,7 @@ header {
 }
 
 /* Language Switcher */
-.lang-switcher {
+/*.lang-switcher {
   position: fixed;
   top: 15px;
   right: 20px;
@@ -310,7 +310,44 @@ header {
 .lang-switcher button:hover,
 .lang-switcher button.active {
   background: var(--primary);
+}*/
+.lang-switcher {
+  position: fixed;
+  top: 15px; right: 20px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 5px;
+  z-index: 10002;
+  display: flex;
+  gap: 5px;
 }
+
+.lang-switcher button {
+  background: transparent;    /* kein oranger Hintergrund */
+  border: none;
+  padding: 0;                 /* kein Innenabstand */
+  width: 40px;                /* feste Größe (anpassbar) */
+  height: 28px;               /* Verhältnis 4:3 für Flaggen */
+  border-radius: 4px;         /* optional abrunden */
+  overflow: hidden;           /* Bild nicht überstehen lassen */
+  cursor: pointer;
+}
+
+.lang-switcher .flag-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* füllt den Container komplett aus */
+  display: block;
+}
+
+.lang-switcher button:hover,
+.lang-switcher button.active {
+  /* optional: beim Hover / Active einen dezenten Rahmen o.ä. */
+  outline: 2px solid var(--primary);
+}
+
 
 /* Mobile Breakpoint */
 @media (max-width: 768px) {
@@ -593,8 +630,12 @@ header {
 <body>
    <!-- Language Switcher (optional) -->
 <div class="lang-switcher">
-  <button id="btn-de">DE</button>
-  <button id="btn-tr">TR</button>
+  <button id="btn-de" data-lang="de">
+    <img src="/flag-de.svg" alt="Deutsch" class="flag-icon no-zoom">
+  </button>
+  <button id="btn-tr" data-lang="tr">
+    <img src="/flag-tr.svg" alt="Türkçe" class="flag-icon no-zoom">
+  </button>
 </div>
 
 <!-- Header -->

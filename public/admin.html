@@ -27,7 +27,7 @@
     }
 
     /* Language-Switcher */
-    .lang-switcher {
+    /*.lang-switcher {
       display: flex;
       justify-content: flex-end;
       gap: 0.5rem;
@@ -48,6 +48,43 @@
       color: white;
       border-color: var(--primary);
     }
+*/
+.lang-switcher {
+  position: fixed;
+  top: 15px; right: 20px;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 5px;
+  z-index: 10002;
+  display: flex;
+  gap: 5px;
+}
+
+.lang-switcher button {
+  background: transparent;    /* kein oranger Hintergrund */
+  border: none;
+  padding: 0;                 /* kein Innenabstand */
+  width: 40px;                /* feste Größe (anpassbar) */
+  height: 28px;               /* Verhältnis 4:3 für Flaggen */
+  border-radius: 4px;         /* optional abrunden */
+  overflow: hidden;           /* Bild nicht überstehen lassen */
+  cursor: pointer;
+}
+
+.lang-switcher .flag-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* füllt den Container komplett aus */
+  display: block;
+}
+
+.lang-switcher button:hover,
+.lang-switcher button.active {
+  /* optional: beim Hover / Active einen dezenten Rahmen o.ä. */
+  outline: 2px solid var(--primary);
+}
 
     h1 {
       text-align: center;
@@ -85,9 +122,13 @@
   <div class="login-container">
     <!-- language switcher -->
     <div class="lang-switcher">
-      <button id="btn-de" data-lang="de" class="active">DE</button>
-      <button id="btn-tr" data-lang="tr">TR</button>
-    </div>
+  <button id="btn-de" data-lang="de">
+    <img src="/flag-de.svg" alt="Deutsch" class="flag-icon no-zoom">
+  </button>
+  <button id="btn-tr" data-lang="tr">
+    <img src="/flag-tr.svg" alt="Türkçe" class="flag-icon no-zoom">
+  </button>
+</div>
 
     <h1 data-i18n="admin.login_title">Admin Login</h1>
     <form action="/admin-login" method="POST">

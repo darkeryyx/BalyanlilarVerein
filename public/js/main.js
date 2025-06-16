@@ -59,18 +59,26 @@ mediaElements = `
                       ? item.content.substring(0, 200) + "…" 
                       : item.content}
                 </p>
-                <a href="news-detail.html?id=${item.id}" class="read-more">
-                  Mehr lesen <span>→</span>
-                </a>
+                <a href="news-detail.html?id=${item.id}" class="read-more" data-i18n="read_more">Mehr lesen <span>→</span></a>
                 ${mediaElements}
               </div>
               <div class="card-footer">
                 ${item.updatedAt && item.updatedAt !== item.createdAt 
-                  ? `<div class="modified">Bearbeitet am: ${item.updatedAt}</div>` 
+                  ? `<div class="modified"><span data-i18n="updated_at">Bearbeitet am:</span> ${item.updatedAt}</div>` 
                   : ""}
-                <div class="created">Erstellt am: ${item.createdAt}</div>
+                <div class="created"><span data-i18n="created_at">Erstellt am:</span> ${item.createdAt}</div>
               </div>
           `;
+            const contentArea = card.querySelector('.card-content');
+  const readMoreLink = card.querySelector('.read-more').href;
+  // visueller Hinweis
+  contentArea.style.cursor = 'pointer';
+  // Klick auf Textfeld → Detailseite
+  contentArea.addEventListener('click', e => {
+    // wenn nicht schon auf Link/Video geklickt wurde
+    if (!e.target.closest('a') && !e.target.closest('video')) {
+      window.location.href = readMoreLink;
+    }  });
           newsList.appendChild(card);
       });
       
@@ -152,18 +160,24 @@ mediaHtml = `
                 ? event.content.substring(0, 200) + "…" 
                 : event.content}
             </p>
-            <a href="events-detail.html?id=${event.id}" class="read-more">
-              Mehr lesen <span>→</span>
-            </a>
+            <a href="events-detail.html?id=${event.id}" class="read-more" data-i18n="read_more">Mehr lesen <span>→</span></a>
           </div>
           <div class="card-footer">
             ${event.updatedAt && event.updatedAt !== event.createdAt 
-              ? `<div class="modified">Bearbeitet am: ${event.updatedAt}</div>` 
+              ? `<div class="modified"><span data-i18n="updated_at">Bearbeitet am:</span> ${event.updatedAt}</div>` 
               : ""}
-            <div class="created">Erstellt am: ${event.createdAt}</div>
+            <div class="created"> <span data-i18n="created_at">Erstellt am:</span> ${event.createdAt}</div>
           </div>
         </div>
       `;
+        const contentArea = card.querySelector('.card-content');
+  const readMoreLink = card.querySelector('.read-more').href;
+  contentArea.style.cursor = 'pointer';
+  contentArea.addEventListener('click', e => {
+    if (!e.target.closest('a') && !e.target.closest('video')) {
+      window.location.href = readMoreLink;
+    }
+  });
       eventsGrid.appendChild(card);
     });
   } catch (error) {

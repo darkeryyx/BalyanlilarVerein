@@ -3030,7 +3030,7 @@ document.addEventListener('DOMContentLoaded', function() {
             modalContent.innerHTML = `
                 <h2>${item.title}</h2>
                 <p>${item.content}</p>
-                ${type === 'event' && item.date ? `<p><strong>Datum:</strong> ${item.date} ${item.time || ''}</p>` : ''}
+                ${type === 'event' && item.date ? `<p><strong>Datum:</strong> ${formatDate(item.date)} ${item.time || ''}</p>` : ''}
                 ${type === 'event' && item.location ? `<p><strong>Ort:</strong> ${item.location}</p>` : ''}
             `;
 modalContent
@@ -3150,7 +3150,7 @@ content.appendChild(text);
             if (item.date) {
                 const dateDetail = document.createElement('div');
                 dateDetail.className = 'item-detail';
-                dateDetail.innerHTML = `<i class="far fa-calendar"></i> ${item.date}${item.time ? ' ' + item.time + ' Uhr' : ''}`;
+                dateDetail.innerHTML = `<i class="far fa-calendar"></i> ${formatDate(item.date)}${item.time ? ' ' + item.time + ' Uhr' : ''}`;
                 details.appendChild(dateDetail);
             }
             

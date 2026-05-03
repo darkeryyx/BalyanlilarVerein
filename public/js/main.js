@@ -147,7 +147,7 @@ mediaHtml = `
         <div class="event-details">
           <div class="card-content">
             <span class="event-date">
-              ${event.date}${event.time ? ", " + event.time : ""}
+              ${formatDate(event.date)}${event.time ? ", " + event.time : ""}
             </span>
             <h3 class="event-title" title="${event.title}">
               ${event.title}

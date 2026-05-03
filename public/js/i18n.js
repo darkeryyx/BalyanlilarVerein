@@ -3,6 +3,15 @@
 // aktuelle Sprache, default Deutsch
 let currentLang = localStorage.getItem('lang') || 'de';
 
+function formatDate(date) {
+  if (!date) return "";
+  const [year, month, day] = String(date).split("-");
+  if (!year || !month || !day) return date;
+  return `${day}.${month}.${year.slice(-2)}`;
+}
+
+window.formatDate = formatDate;
+
 // Übersetzt alle markierten Elemente
 function updateTranslations() {
     // Text-Inhalte

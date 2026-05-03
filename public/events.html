@@ -573,7 +573,7 @@ header {
           <div class="media-title" title="${ev.title}">${ev.title}</div>
           <div class="event-meta">
             <div>
-              <i class="fas fa-calendar-alt"></i> ${ev.date}
+              <i class="fas fa-calendar-alt"></i> ${formatDate(ev.date)}
               ${ev.time
                 ? `<span class="event-time"><i class="fas fa-clock"></i> ${ev.time}</span>`
                 : ''

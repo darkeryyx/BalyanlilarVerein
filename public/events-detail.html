@@ -263,7 +263,7 @@ h1 {
         document.getElementById("event-detail").innerHTML = `
           <h1>${event.title}</h1>
           <div class="event-date">
-            ${event.date}${event.time ? " – " + event.time : ""}
+            ${formatDate(event.date)}${event.time ? " – " + event.time : ""}
           </div>
           <p class="event-meta">
             <i class="fas fa-map-marker-alt"></i> ${event.location}
